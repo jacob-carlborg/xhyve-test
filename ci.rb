@@ -31,11 +31,11 @@ class XhyveVm
   end
 
   def run
-    fork { `sudo ./run.sh` }
+    fork { `./run.sh` }
   end
 
   def mac_address
-    @mac_address ||= `sudo ./run.sh -M`.strip[5 .. -1]
+    @mac_address ||= `./run.sh -M`.strip[5 .. -1]
   end
 
   def dhcpd_leases
