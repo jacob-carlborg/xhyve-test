@@ -47,12 +47,16 @@ class XhyveVm
   end
 
   def get_ip_address_from_arp(mac_address)
-    result = `arp -a -n`
-      .split("\n")
-      .find { |e| e.include?(mac_address) }
+    0.upto(9) do
+      result = `arp -a -n`
+        .split("\n")
+        .find { |e| e.include?(mac_address) }
 
-    match_result = /\((.+)\)/.match(result)
-    return match_result[1] if match_result
+      match_result = /\((.+)\)/.match(result)
+      return match_result[1] if match_result
+      sleep 5
+    end
+
     raise "Failed to get IP address for MAC address: #{mac_address}"
   end
 
