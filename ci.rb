@@ -92,6 +92,10 @@ class CiRunner
   def vm
     @vm ||= XhyveVm.new
   end
+
+  def config_ssh_allow_new_hosts
+    File.write('~/.ssh/config', 'StrictHostKeyChecking=accept-new', mode: 'a')
+  end
 end
 
 CiRunner.new.run
