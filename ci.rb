@@ -27,7 +27,7 @@ class XhyveVm
   end
 
   def exec(command)
-    system "ssh root@#{ip_address} '#{command}'"
+    system "ssh -i id_rsa root@#{ip_address} '#{command}'"
   end
 
   def run
