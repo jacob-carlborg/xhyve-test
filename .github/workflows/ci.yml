@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: '*'
+
+jobs:
+  test:
+    name: Test
+    runs-on: macos-10.15
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Install Xhyve
+        run: brew install xhyve --HEAD
+
+      - name: Unarchive disk
+        run: tar xf disk.tar.xz
+
+      - name: Run CI
+        run: ./ci.rb
