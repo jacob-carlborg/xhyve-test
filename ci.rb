@@ -11,6 +11,12 @@ class NilClass
   end
 end
 
+def try(default)
+  yield
+rescue Errno::ENOENT
+  return default
+end
+
 class XhyveVm
   def initialize
     mac_address # eagerly set MAC address
@@ -40,7 +46,7 @@ class XhyveVm
 
   def get_ip_address(mac_address)
     0.upto(9) do
-      ip_address = dhcpd_leases
+      ip_address = try('') { dhcpd_leases }
         .split('{')
         .find { |e| e.include?(mac_address) }
         .try do |e|
@@ -49,7 +55,6 @@ class XhyveVm
             .find { |e| e.start_with?("ip_address=") }
             .split('=')[1]
         end
-
 
       return ip_address if ip_address
       sleep 5
