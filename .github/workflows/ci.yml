@@ -25,4 +25,4 @@ jobs:
         run: XZ_OPT="$XZ_OPT --threads=0" tar xf disk.tar.xz
 
       - name: Run CI
-        run: ./run.sh -M
+        run: sudo ./run.sh -M
