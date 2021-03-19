@@ -81,6 +81,7 @@ class CiRunner
     puts "MAC address: #{vm.mac_address}"
     sleep 120
     puts "2 MAC address: #{vm.mac_address}"
+    system 'arp -a -n'
     puts "IP address: #{vm.ip_address}"
     vm.run
     vm.exec 'freebsd-version'
