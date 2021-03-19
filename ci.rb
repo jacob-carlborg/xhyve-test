@@ -67,10 +67,13 @@ end
 
 class CiRunner
   def run
+    puts "MAC address: #{vm.mac_address}"
+    sleep 120
+    puts "2 MAC address: #{vm.mac_address}"
     puts "IP address: #{vm.ip_address}"
-    vm.run
-    vm.exec 'freebsd-version'
-    vm.exec 'shutdown -p now'
+    # vm.run
+    # vm.exec 'freebsd-version'
+    # vm.exec 'shutdown -p now'
   end
 
   def vm
