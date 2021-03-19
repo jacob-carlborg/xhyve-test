@@ -43,6 +43,20 @@ class XhyveVm
   end
 
   def get_ip_address(mac_address)
+    get_ip_address_from_arp(mac_address)
+  end
+
+  def get_ip_address_from_arp(mac_address)
+    result = `arp -a -n`
+      .split("\n")
+      .find { |e| e.include?(mac_address) }
+
+    match_result = /\((.+)\)/.match(result)
+    return match_result[1] if match_result
+    raise "Failed to get IP address for MAC address: #{mac_address}"
+  end
+
+  def get_ip_address_from_dhcpd_leases(mac_address)
     0.upto(9) do
       ip_address = try('') { dhcpd_leases }
         .split('{')
@@ -60,7 +74,6 @@ class XhyveVm
 
     raise "Failed to get IP address for MAC address: #{mac_address}"
   end
-
 end
 
 class CiRunner
