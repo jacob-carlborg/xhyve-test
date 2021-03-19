@@ -80,17 +80,7 @@ class CiRunner
   def run
     puts vm.mac_address
     vm.run
-    sleep 120
-    begin
-      puts vm.get_ip_address_from_dhcpd_leases(vm.mac_address)
-    rescue
-      puts "Failed to get IP address from dhcpd_leases"
-    end
-    begin
-      puts vm.get_ip_address_from_arp(vm.mac_address)
-    rescue
-      puts "Failed to get IP address from arp"
-    end
+    puts vm.ip_address
     vm.exec 'freebsd-version'
     vm.exec 'shutdown -p now'
   end
