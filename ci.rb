@@ -47,7 +47,7 @@ class XhyveVm
   end
 
   def get_ip_address_from_arp(mac_address)
-    0.upto(9) do
+    0.upto(19) do
       result = `arp -a -n`
         .split("\n")
         .find { |e| e.include?(mac_address) }
