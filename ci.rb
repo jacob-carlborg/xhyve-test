@@ -34,8 +34,6 @@ class XhyveVm
     fork { `sudo ./run.sh` }
   end
 
-  private
-
   def mac_address
     @mac_address ||= `sudo ./run.sh -M`.strip[5 .. -1]
   end
