@@ -27,11 +27,13 @@ class XhyveVm
   end
 
   def exec(command)
-    0.upto(20)
+    0.upto(20) do
       system "ssh -i id_rsa root@#{ip_address} '#{command}'"
       return if $?.success?
       sleep 1
     end
+
+    raise "Failed to execute VM command: #{command}"
   end
 
   def run
@@ -98,8 +100,18 @@ class CiRunner
     @vm ||= XhyveVm.new
   end
 
-  def config_ssh_allow_new_hosts
-    File.write(File.join(ENV['HOME'], '.ssh/config'), 'StrictHostKeyChecking=accept-new', mode: 'a')
+  def ssh_directory
+    @ssh_directory ||= File.join(ENV['HOME'], '.ssh')
+  end
+
+  def ssh_config_path
+    @ssh_config_path ||= File.join(ssh_directory, 'config')
+  end
+
+  def config_ssh
+    File.write(ssh_config_path, 'StrictHostKeyChecking=accept-new', mode: 'a')
+    File.chmod(0600, 'id_rsa')
+    File.chmod(0700, ssh_directory)
   end
 end
 
