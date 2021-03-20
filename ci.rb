@@ -95,7 +95,7 @@ class CiRunner
   end
 
   def config_ssh_allow_new_hosts
-    File.write('~/.ssh/config', 'StrictHostKeyChecking=accept-new', mode: 'a')
+    File.write(File.join(ENV['HOME'], '.ssh/config'), 'StrictHostKeyChecking=accept-new', mode: 'a')
   end
 end
 
