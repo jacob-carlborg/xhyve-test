@@ -88,7 +88,7 @@ end
 
 class CiRunner
   def run
-    config_ssh_allow_new_hosts
+    config_ssh
     puts vm.mac_address
     vm.run
     puts vm.ip_address
