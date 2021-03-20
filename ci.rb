@@ -27,7 +27,11 @@ class XhyveVm
   end
 
   def exec(command)
-    system "ssh -i id_rsa root@#{ip_address} '#{command}'"
+    0.upto(20)
+      system "ssh -i id_rsa root@#{ip_address} '#{command}'"
+      return if $?.success?
+      sleep 1
+    end
   end
 
   def run
@@ -47,21 +51,21 @@ class XhyveVm
   end
 
   def get_ip_address_from_arp(mac_address)
-    0.upto(19) do
+    0.upto(100) do
       result = `arp -a -n`
         .split("\n")
         .find { |e| e.include?(mac_address) }
 
       match_result = /\((.+)\)/.match(result)
       return match_result[1] if match_result
-      sleep 5
+      sleep 1
     end
 
     raise "Failed to get IP address for MAC address: #{mac_address}"
   end
 
   def get_ip_address_from_dhcpd_leases(mac_address)
-    0.upto(9) do
+    0.upto(50) do
       ip_address = try('') { dhcpd_leases }
         .split('{')
         .find { |e| e.include?(mac_address) }
@@ -73,7 +77,7 @@ class XhyveVm
         end
 
       return ip_address if ip_address
-      sleep 5
+      sleep 1
     end
 
     raise "Failed to get IP address for MAC address: #{mac_address}"
