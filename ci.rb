@@ -91,8 +91,8 @@ end
 
 class CiRunner
   def run
-    config_ssh
-    install_qemu_img
+    # config_ssh
+    # install_qemu_img
     convert_to_raw_disk
     # puts vm.mac_address
     # vm.run
@@ -134,7 +134,8 @@ class CiRunner
 
   def convert_to_raw_disk
     puts 'convert_to_raw_disk'
-    `./qemu-img convert -f qcow2 -O raw disk.qcow2 disk.raw`
+    system './qemu-img', 'convert', '-f', 'qcow2', '-O', 'raw', 'disk.qcow2', 'disk.raw'
+    #`./qemu-img convert -f qcow2 -O raw disk.qcow2 disk.raw`
     raise 'Failed to convert disk image to raw format' unless $?.success?
   end
 end
