@@ -93,7 +93,7 @@ class CiRunner
   def run
     config_ssh
     install_qemu_img
-    # convert_to_raw_disk
+    convert_to_raw_disk
     # puts vm.mac_address
     # vm.run
     # puts vm.ip_address
