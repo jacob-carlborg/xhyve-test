@@ -91,14 +91,14 @@ end
 
 class CiRunner
   def run
-    # config_ssh
-    # install_qemu_img
+    config_ssh
+    install_qemu_img
     convert_to_raw_disk
-    # puts vm.mac_address
-    # vm.run
-    # puts vm.ip_address
-    # vm.exec 'freebsd-version'
-    # vm.exec 'shutdown -p now'
+    puts vm.mac_address
+    vm.run
+    puts vm.ip_address
+    vm.exec 'freebsd-version'
+    vm.exec 'shutdown -p now'
   end
 
   def vm
