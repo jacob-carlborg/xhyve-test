@@ -7,19 +7,40 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: macos-11.0
+    runs-on: macos-15.0
 
     steps:
-      - name: Clone Repository
-        uses: actions/checkout@v2
+      # - name: Clone Repository
+      #   uses: actions/checkout@v2
+      #   with:
+      #     persist-credentials: false
+
+      - name: Install qemu
+        run: brew install qemu
+
+      - name: archive
+        run: |
+          cp /usr/local/opt/glib/lib/libglib-2.0.0.dylib .
+          cp /usr/local/opt/pcre/lib/libpcre.1.dylib .
+          cp /usr/local/opt/gettext/lib/libintl.8.dylib .
+          tar cf libs.tar libglib-2.0.0.dylib libpcre.1.dylib libintl.8.dylib
+
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
         with:
-          persist-credentials: false
+          name: Upload dylibs
+          draft: true
+          files: libs.tar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download disk archive
-        run: curl -L -o disk.tar https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/disk.tar
-
-      - name: Unarchive disk
-        run: tar xf disk.tar
-
-      - name: Run CI
-        run: ./ci.rb
+      # - name: Download disk archive
+      #   run: curl -L -o disk.tar https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/disk.tar
+      #
+      # - name: Unarchive disk
+      #   run: tar xf disk.tar
+      #
+      # - name: Run CI
+      #   run: ./ci.rb
