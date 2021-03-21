@@ -92,13 +92,12 @@ end
 class CiRunner
   def run
     config_ssh
-    # install_qemu_img
     convert_to_raw_disk
-    # puts vm.mac_address
-    # vm.run
-    # puts vm.ip_address
-    # vm.exec 'freebsd-version'
-    # vm.exec 'shutdown -p now'
+    puts vm.mac_address
+    vm.run
+    puts vm.ip_address
+    vm.exec 'freebsd-version'
+    vm.exec 'shutdown -p now'
   end
 
   def vm
@@ -120,22 +119,9 @@ class CiRunner
     File.chmod(0700, ssh_directory)
   end
 
-  def install_qemu_img
-    puts "install_qemu_img"
-    FileUtils.mkdir_p('/usr/local/opt/glib/lib')
-    File.rename('libglib-2.0.0.dylib', '/usr/local/opt/glib/lib/libglib-2.0.0.dylib')
-
-    FileUtils.mkdir_p('/usr/local/opt/gettext/lib')
-    File.rename('libintl.8.dylib', '/usr/local/opt/gettext/lib/libintl.8.dylib')
-
-    FileUtils.mkdir_p('/usr/local/opt/pcre/lib')
-    File.rename('libpcre.1.dylib', '/usr/local/opt/pcre/lib/libpcre.1.dylib')
-  end
-
   def convert_to_raw_disk
     puts 'convert_to_raw_disk'
     system './qemu-img', 'convert', '-f', 'qcow2', '-O', 'raw', 'disk.qcow2', 'disk.raw'
-    #`./qemu-img convert -f qcow2 -O raw disk.qcow2 disk.raw`
     raise 'Failed to convert disk image to raw format' unless $?.success?
   end
 end
