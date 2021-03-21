@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: macos-10.15
+    runs-on: macos-11.0
 
     steps:
       - name: Clone Repository
@@ -15,17 +15,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install qemu
-        run: brew install qemu
+      - name: Download disk archive
+        run: curl -L -o disk.tar https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/disk.tar
 
-      # - name: Install Xhyve
-      #   run: brew install xhyve --HEAD
-      #
-      # - name: Download disk archive
-      #   run: curl -L -o disk.tar.xz https://github.com/jacob-carlborg/xhyve-test/releases/download/test/disk.tar.xz
-      #
-      # - name: Unarchive disk
-      #   run: XZ_OPT="$XZ_OPT --threads=0" tar xf disk.tar.xz
-      #
-      # - name: Run CI
-      #   run: ./ci.rb
+      - name: Unarchive disk
+        run: tar xf disk.tar
+
+      - name: Run CI
+        run: ./ci.rb

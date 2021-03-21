@@ -7,7 +7,7 @@ source ./shared.sh
 
 memory='4G'
 
-sudo xhyve \
+sudo ./xhyve \
     -U "$uuid" \
     -A \
     -H \
