@@ -20,7 +20,7 @@ rescue Errno::ENOENT
 end
 
 def execute(*args)
-  system(args)
+  system(*args)
   raise "Failed to execute command: #{args.join(' ')}" unless $?.success?
 end
 
