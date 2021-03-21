@@ -25,5 +25,8 @@ jobs:
       - name: List files
         run: ls -lh
 
-      - name: Run CI
-        run: ./ci.rb
+      - name: Convert qcow2 disk to raw disk
+        run: qemu-img convert -f qcow2 -O raw disk.qcow2 disk.raw
+
+      # - name: Run CI
+      #   run: ./ci.rb
