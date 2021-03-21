@@ -19,6 +19,11 @@ rescue Errno::ENOENT
   return default
 end
 
+def execute(*args)
+  system(args)
+  raise "Failed to execute command: #{args.join(' ')}" unless $?.success?
+end
+
 class XhyveVm
   def initialize
     mac_address # eagerly set MAC address
@@ -28,9 +33,23 @@ class XhyveVm
     @ip_address ||= get_ip_address(mac_address)
   end
 
-  def exec(command)
+  def mac_address
+    @mac_address ||= `./run.sh -M`.strip[5 .. -1]
+  end
+
+  def run
+    @vm_pid = fork { `./run.sh` }
+  end
+
+  def stop
+    execute 'shutdown -p now'
+    Process.wait(vm_pid)
+  end
+
+  def execute(command)
     0.upto(20) do
-      system "ssh -i id_rsa root@#{ip_address} '#{command}'"
+      system 'ssh', '-i', 'id_ed25519', "root@#{ip_address}", command
+      # system "ssh -i id_ed25519 root@#{ip_address} '#{command}'"
       return if $?.success?
       sleep 1
     end
@@ -38,14 +57,9 @@ class XhyveVm
     raise "Failed to execute VM command: #{command}"
   end
 
-  def run
-    puts "run"
-    fork { `./run.sh` }
-  end
+  private
 
-  def mac_address
-    @mac_address ||= `./run.sh -M`.strip[5 .. -1]
-  end
+  attr_reader :vm_pid
 
   def dhcpd_leases
     @dhcpd_leases ||= File.read('/var/db/dhcpd_leases')
@@ -96,8 +110,8 @@ class CiRunner
     puts vm.mac_address
     vm.run
     puts vm.ip_address
-    vm.exec 'freebsd-version'
-    vm.exec 'shutdown -p now'
+    vm.execute 'freebsd-version'
+    vm.stop
   end
 
   def vm
@@ -121,8 +135,7 @@ class CiRunner
 
   def convert_to_raw_disk
     puts 'convert_to_raw_disk'
-    system './qemu-img', 'convert', '-f', 'qcow2', '-O', 'raw', 'disk.qcow2', 'disk.raw'
-    raise 'Failed to convert disk image to raw format' unless $?.success?
+    execute './qemu-img', 'convert', '-f', 'qcow2', '-O', 'raw', 'disk.qcow2', 'disk.raw'
   end
 end
 
