@@ -22,5 +22,8 @@ jobs:
       - name: Unarchive disk
         run: tar xf resources.tar
 
+      - name: List files
+        run: ls -lh
+
       - name: Run CI
         run: ./ci.rb

@@ -39,6 +39,7 @@ class XhyveVm
   end
 
   def run
+    puts "run"
     fork { `./run.sh` }
   end
 
@@ -113,12 +114,14 @@ class CiRunner
   end
 
   def config_ssh
+    puts "config_ssh"
     File.write(ssh_config_path, 'StrictHostKeyChecking=accept-new', mode: 'a')
     File.chmod(0600, 'id_ed25519')
     File.chmod(0700, ssh_directory)
   end
 
   def install_qemu_img
+    puts "install_qemu_img"
     FileUtils.mkdir_p('/usr/local/opt/glib/lib')
     File.rename('libglib-2.0.0.dylib', '/usr/local/opt/glib/lib/libglib-2.0.0.dylib')
 
@@ -130,6 +133,7 @@ class CiRunner
   end
 
   def convert_to_raw_disk
+    puts "convert_to_raw_disk"
     system './qemu-img convert -f qcow2 -O raw disk.qcow2 disk.raw'
     raise 'Failed to convert disk image to raw format' unless $?.success?
   end
