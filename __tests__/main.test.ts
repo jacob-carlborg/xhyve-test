@@ -1,4 +1,4 @@
-import * as main from '../src/main'
+import * as xhyve from '../src/xhyve_vm'
 
 test('extractIpAddress - finding IP address', () => {
   const ipAddress = '192.168.0.2'
@@ -7,9 +7,8 @@ test('extractIpAddress - finding IP address', () => {
     '? (0.0.0.0) at 00:00:00:00:00:00 on en2 ifscope [ethernet]',
     `? (${ipAddress}) at ${macAddress} on en1 ifscope [ethernet]`
   ].join('\n')
-  const vm = new main.XhyveVm()
 
-  expect(vm.extractIpAddress(arpOutput, macAddress)).toBe(ipAddress)
+  expect(xhyve.extractIpAddress(arpOutput, macAddress)).toBe(ipAddress)
 })
 
 test('extractIpAddress - not finding IP address', () => {
@@ -18,7 +17,6 @@ test('extractIpAddress - not finding IP address', () => {
     '? (0.0.0.0) at 00:00:00:00:00:00 on en2 ifscope [ethernet]',
     '? (0.0.0.1) at 00:00:00:00:00:01 on en1 ifscope [ethernet]'
   ].join('\n')
-  const vm = new main.XhyveVm()
 
-  expect(vm.extractIpAddress(arpOutput, macAddress)).toBe(undefined)
+  expect(xhyve.extractIpAddress(arpOutput, macAddress)).toBe(undefined)
 })

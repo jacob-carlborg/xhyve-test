@@ -2,7 +2,7 @@ require('./sourcemap-register.js');module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 109:
+/***/ 139:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -36,94 +36,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.XhyveVm = void 0;
-const core = __importStar(__webpack_require__(186));
-const cache = __importStar(__webpack_require__(784));
-const path = __importStar(__webpack_require__(622));
 const fs = __importStar(__webpack_require__(747));
+const path = __importStar(__webpack_require__(622));
+const cache = __importStar(__webpack_require__(784));
+const core = __importStar(__webpack_require__(186));
 const exec = __importStar(__webpack_require__(514));
-const child_process_1 = __webpack_require__(129);
-function execWithOutput(commandLine, args) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let output;
-        const exitCode = yield exec.exec(commandLine, args, {
-            listeners: {
-                stdout: buffer => (output += buffer.toString())
-            }
-        });
-        if (exitCode !== 0)
-            throw Error(`Failed to executed command: ${commandLine} ${args === null || args === void 0 ? void 0 : args.join(' ')}`);
-        return output;
-    });
-}
-var VmType;
-(function (VmType) {
-    VmType[VmType["freeBsd"] = 0] = "freeBsd";
-})(VmType || (VmType = {}));
-class XhyveVm {
-    constructor(sshKey, xhyvePath, options) {
-        this.sshKey = sshKey;
-        this.xhyvePath = xhyvePath;
-        this.options = options;
-    }
-    static getVm(type) {
-        switch (type) {
-            case VmType.freeBsd: return FreeBsd;
-        }
-    }
-    init() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.macAddress = yield this.getMacAddress();
-        });
-    }
-    run() {
-        child_process_1.spawn('sudo', this.xhyveArgs, { detached: true });
-    }
-    stop() {
-        this.execute('shutdown -h -p now');
-    }
-    execute(command) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const buffer = Buffer.from(command);
-            yield exec.exec('ssh', ['-i', this.sshKey.toString(), `root@${this.ipAddress}`], {
-                input: buffer
-            });
-        });
-    }
-    getMacAddress() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.macAddress = yield execWithOutput('sudo', this.xhyveArgs.concat('-M'));
-        });
-    }
-    extractIpAddress(arpOutput, macAddress) {
-        var _a;
-        const result = (_a = arpOutput
-            .split("\n")
-            .find(e => e.includes(macAddress))) === null || _a === void 0 ? void 0 : _a.match(/\((.+)\)/);
-        return result ? result[1] : undefined;
-    }
-    get xhyveArgs() {
-        return [
-            this.xhyvePath.toString(),
-            '-U', this.options.uuid,
-            '-A',
-            '-H',
-            '-m', this.options.memory,
-            '-c', this.options.cpuCount.toString(),
-            '-s', '0:0,hostbridge',
-            '-s', '2:0,virtio-net',
-            '-s', `4:0,virtio-blk,${this.options.diskImage}`,
-            '-s', '31,lpc',
-            '-l', 'com1,stdio'
-        ];
-    }
-}
-exports.XhyveVm = XhyveVm;
-class FreeBsd extends XhyveVm {
-    get xhyveArgs() {
-        return super.xhyveArgs.concat(`-f fbsd,${this.options.userboot},${this.options.diskImage},`);
-    }
-}
+const xhyve = __importStar(__webpack_require__(722));
 class Action {
     constructor() {
         this.resourceUrl = 'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar';
@@ -136,8 +54,8 @@ class Action {
             const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519');
             this.configSSH(sshKeyPath);
             yield this.convertToRawDisk(resourcesDirectory);
-            const VmClass = XhyveVm.getVm(VmType.freeBsd);
-            const vm = new VmClass(sshKeyPath, path.join(resourcesDirectory, "xhyve"), {
+            const VmClass = xhyve.Vm.getVm(0 /* freeBsd */);
+            const vm = new VmClass(sshKeyPath, path.join(resourcesDirectory, 'xhyve'), {
                 memory: '4G',
                 cpuCount: 2,
                 diskImage: path.join(resourcesDirectory, this.targetDiskName),
@@ -184,10 +102,54 @@ class Action {
         });
     }
 }
+exports.default = Action;
+
+
+/***/ }),
+
+/***/ 109:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__webpack_require__(186));
+const action_1 = __importDefault(__webpack_require__(139));
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            new Action().run();
+            yield new action_1.default().run();
         }
         catch (error) {
             core.setFailed(error.message);
@@ -195,6 +157,127 @@ function main() {
     });
 }
 main();
+
+
+/***/ }),
+
+/***/ 722:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.extractIpAddress = exports.Vm = void 0;
+const exec = __importStar(__webpack_require__(514));
+const child_process_1 = __webpack_require__(129);
+class Vm {
+    constructor(sshKey, xhyvePath, options) {
+        this.sshKey = sshKey;
+        this.xhyvePath = xhyvePath;
+        this.options = options;
+    }
+    static getVm(type) {
+        switch (type) {
+            case 0 /* freeBsd */:
+                return FreeBsd;
+        }
+    }
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.macAddress = yield this.getMacAddress();
+        });
+    }
+    run() {
+        child_process_1.spawn('sudo', this.xhyveArgs, { detached: true });
+    }
+    stop() {
+        this.execute('shutdown -h -p now');
+    }
+    execute(command) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const buffer = Buffer.from(command);
+            yield exec.exec('ssh', ['-i', this.sshKey.toString(), `root@${this.ipAddress}`], {
+                input: buffer
+            });
+        });
+    }
+    getMacAddress() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (this.macAddress = yield execWithOutput('sudo', this.xhyveArgs.concat('-M')));
+        });
+    }
+    get xhyveArgs() {
+        // prettier-ignore
+        return [
+            this.xhyvePath.toString(),
+            '-U', this.options.uuid,
+            '-A',
+            '-H',
+            '-m', this.options.memory,
+            '-c', this.options.cpuCount.toString(),
+            '-s', '0:0,hostbridge',
+            '-s', '2:0,virtio-net',
+            '-s', `4:0,virtio-blk,${this.options.diskImage}`,
+            '-s', '31,lpc',
+            '-l', 'com1,stdio'
+        ];
+    }
+}
+exports.Vm = Vm;
+function extractIpAddress(arpOutput, macAddress) {
+    var _a;
+    const result = (_a = arpOutput
+        .split('\n')
+        .find(e => e.includes(macAddress))) === null || _a === void 0 ? void 0 : _a.match(/\((.+)\)/);
+    return result ? result[1] : undefined;
+}
+exports.extractIpAddress = extractIpAddress;
+class FreeBsd extends Vm {
+    get xhyveArgs() {
+        return super.xhyveArgs.concat(`-f fbsd,${this.options.userboot},${this.options.diskImage},`);
+    }
+}
+function execWithOutput(commandLine, args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let output;
+        const exitCode = yield exec.exec(commandLine, args, {
+            listeners: {
+                stdout: buffer => (output += buffer.toString())
+            }
+        });
+        if (exitCode !== 0)
+            throw Error(`Failed to executed command: ${commandLine} ${args === null || args === void 0 ? void 0 : args.join(' ')}`);
+        return output;
+    });
+}
 
 
 /***/ }),
