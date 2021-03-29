@@ -63,7 +63,9 @@ class Action {
                 userboot: path.join(resourcesDirectory, 'userboot.so')
             });
             yield vm.init();
-            vm.run();
+            yield vm.run();
+            yield vm.execute('freebsd-version');
+            yield vm.stop();
         });
     }
     downloadResources() {
@@ -161,6 +163,37 @@ main();
 
 /***/ }),
 
+/***/ 817:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.wait = void 0;
+function wait(milliseconds) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => {
+            if (isNaN(milliseconds)) {
+                throw new Error('milliseconds not a number');
+            }
+            setTimeout(() => resolve('done!'), milliseconds);
+        });
+    });
+}
+exports.wait = wait;
+
+
+/***/ }),
+
 /***/ 722:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -198,6 +231,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.extractIpAddress = exports.Vm = void 0;
 const exec = __importStar(__webpack_require__(514));
 const child_process_1 = __webpack_require__(129);
+const wait_1 = __webpack_require__(817);
 class Vm {
     constructor(sshKey, xhyvePath, options) {
         this.sshKey = sshKey;
@@ -216,10 +250,15 @@ class Vm {
         });
     }
     run() {
-        child_process_1.spawn('sudo', this.xhyveArgs, { detached: true });
+        return __awaiter(this, void 0, void 0, function* () {
+            child_process_1.spawn('sudo', this.xhyveArgs, { detached: true });
+            this.ipAddress = yield getIpAddressFromArp(this.macAddress);
+        });
     }
     stop() {
-        this.execute('shutdown -h -p now');
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.execute('shutdown -h -p now');
+        });
     }
     execute(command) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -276,6 +315,18 @@ function execWithOutput(commandLine, args) {
         if (exitCode !== 0)
             throw Error(`Failed to executed command: ${commandLine} ${args === null || args === void 0 ? void 0 : args.join(' ')}`);
         return output;
+    });
+}
+function getIpAddressFromArp(macAddress) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let i = 0; i < 100; i++) {
+            const arpOutput = yield execWithOutput('arp', ['-a', '-n']);
+            const ipAddress = extractIpAddress(arpOutput, macAddress);
+            if (ipAddress)
+                return ipAddress;
+            yield wait_1.wait(1000);
+        }
+        throw Error(`Failed to get IP address for MAC address: ${macAddress}`);
     });
 }
 

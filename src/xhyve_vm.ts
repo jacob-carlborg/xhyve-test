@@ -1,6 +1,7 @@
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import {spawn} from 'child_process'
+import {wait} from './wait'
 
 export interface Options {
   memory: string
@@ -38,12 +39,13 @@ export class Vm {
     this.macAddress = await this.getMacAddress()
   }
 
-  run(): void {
+  async run(): Promise<void> {
     spawn('sudo', this.xhyveArgs, {detached: true})
+    this.ipAddress = await getIpAddressFromArp(this.macAddress)
   }
 
-  stop(): void {
-    this.execute('shutdown -h -p now')
+  async stop(): Promise<void> {
+    await this.execute('shutdown -h -p now')
   }
 
   async execute(command: string): Promise<void> {
@@ -118,4 +120,17 @@ async function execWithOutput(
     throw Error(`Failed to executed command: ${commandLine} ${args?.join(' ')}`)
 
   return output
+}
+
+async function getIpAddressFromArp(macAddress: string): Promise<string> {
+  for (let i = 0; i < 100; i++) {
+    const arpOutput = await execWithOutput('arp', ['-a', '-n'])
+    const ipAddress = extractIpAddress(arpOutput, macAddress)
+
+    if (ipAddress) return ipAddress
+
+    await wait(1_000)
+  }
+
+  throw Error(`Failed to get IP address for MAC address: ${macAddress}`)
 }

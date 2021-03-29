@@ -20,7 +20,9 @@ export default class Action {
     )
     const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519')
     this.configSSH(sshKeyPath)
+
     await this.convertToRawDisk(resourcesDirectory)
+
     const VmClass = xhyve.Vm.getVm(xhyve.Type.freeBsd)
     const vm = new VmClass(sshKeyPath, path.join(resourcesDirectory, 'xhyve'), {
       memory: '4G',
@@ -29,8 +31,11 @@ export default class Action {
       uuid: '864ED7F0-7876-4AA7-8511-816FABCFA87F',
       userboot: path.join(resourcesDirectory, 'userboot.so')
     })
+
     await vm.init()
-    vm.run()
+    await vm.run()
+    await vm.execute('freebsd-version')
+    await vm.stop()
   }
 
   async downloadResources(): Promise<string> {
