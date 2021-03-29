@@ -1,28 +1,24 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import * as cp from 'child_process'
-import * as path from 'path'
+import * as main from '../src/main'
 
-test('throws invalid number', async () => {
-  const input = parseInt('foo', 10)
-  await expect(wait(input)).rejects.toThrow('milliseconds not a number')
+test('extractIpAddress - finding IP address', () => {
+  const ipAddress = '192.168.0.2'
+  const macAddress = '40:8e:71:34:88:eb'
+  const arpOutput = [
+    '? (0.0.0.0) at 00:00:00:00:00:00 on en2 ifscope [ethernet]',
+    `? (${ipAddress}) at ${macAddress} on en1 ifscope [ethernet]`
+  ].join("\n")
+  const vm = new main.XhyveVm()
+
+  expect(vm.extractIpAddress(arpOutput, macAddress)).toBe(ipAddress)
 })
 
-test('wait 500 ms', async () => {
-  const start = new Date()
-  await wait(500)
-  const end = new Date()
-  var delta = Math.abs(end.getTime() - start.getTime())
-  expect(delta).toBeGreaterThan(450)
-})
+test('extractIpAddress - not finding IP address', () => {
+  const macAddress = '40:8e:71:34:88:eb'
+  const arpOutput = [
+    '? (0.0.0.0) at 00:00:00:00:00:00 on en2 ifscope [ethernet]',
+    '? (0.0.0.1) at 00:00:00:00:00:01 on en1 ifscope [ethernet]',
+  ].join("\n")
+  const vm = new main.XhyveVm()
 
-// shows how the runner will run a javascript action with env / stdout protocol
-test('test runs', () => {
-  process.env['INPUT_MILLISECONDS'] = '500'
-  const np = process.execPath
-  const ip = path.join(__dirname, '..', 'lib', 'main.js')
-  const options: cp.ExecFileSyncOptions = {
-    env: process.env
-  }
-  console.log(cp.execFileSync(np, [ip], options).toString())
+  expect(vm.extractIpAddress(arpOutput, macAddress)).toBe(undefined)
 })
