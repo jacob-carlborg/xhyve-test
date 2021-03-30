@@ -109,7 +109,7 @@ class Action {
     }
 }
 exports.default = Action;
-
+//# sourceMappingURL=action.js.map
 
 /***/ }),
 
@@ -163,7 +163,7 @@ function main() {
     });
 }
 main();
-
+//# sourceMappingURL=main.js.map
 
 /***/ }),
 
@@ -194,7 +194,7 @@ function wait(milliseconds) {
     });
 }
 exports.wait = wait;
-
+//# sourceMappingURL=wait.js.map
 
 /***/ }),
 
@@ -232,7 +232,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.extractIpAddress = exports.Vm = void 0;
+exports.execWithOutput = exports.extractIpAddress = exports.Vm = void 0;
 const core = __importStar(__webpack_require__(186));
 const exec = __importStar(__webpack_require__(514));
 const child_process_1 = __webpack_require__(129);
@@ -313,11 +313,6 @@ function extractIpAddress(arpOutput, macAddress) {
     return ipAddress;
 }
 exports.extractIpAddress = extractIpAddress;
-class FreeBsd extends Vm {
-    get xhyveArgs() {
-        return super.xhyveArgs.concat('-f', `fbsd,${this.options.userboot},${this.options.diskImage},`);
-    }
-}
 function execWithOutput(commandLine, args) {
     return __awaiter(this, void 0, void 0, function* () {
         let output;
@@ -331,6 +326,12 @@ function execWithOutput(commandLine, args) {
         return output;
     });
 }
+exports.execWithOutput = execWithOutput;
+class FreeBsd extends Vm {
+    get xhyveArgs() {
+        return super.xhyveArgs.concat('-f', `fbsd,${this.options.userboot},${this.options.diskImage},`);
+    }
+}
 function getIpAddressFromArp(macAddress) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let i = 0; i < 100; i++) {
@@ -343,7 +344,7 @@ function getIpAddressFromArp(macAddress) {
         throw Error(`Failed to get IP address for MAC address: ${macAddress}`);
     });
 }
-
+//# sourceMappingURL=xhyve_vm.js.map
 
 /***/ }),
 

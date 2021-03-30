@@ -108,30 +108,30 @@ export function extractIpAddress(
   return ipAddress
 }
 
-class FreeBsd extends Vm {
-  get xhyveArgs(): string[] {
-    return super.xhyveArgs.concat(
-      '-f', `fbsd,${this.options.userboot},${this.options.diskImage},`
-    )
-  }
-}
-
-async function execWithOutput(
+export async function execWithOutput(
   commandLine: string,
   args?: string[]
 ): Promise<string> {
-  let output!: string
+  let output = ""
 
   const exitCode = await exec.exec(commandLine, args, {
     listeners: {
-      stdout: buffer => (output += buffer.toString())
+      stdout: buffer => output += buffer.toString()
     }
   })
 
   if (exitCode !== 0)
     throw Error(`Failed to executed command: ${commandLine} ${args?.join(' ')}`)
 
-  return output
+  return output.toString()
+}
+
+class FreeBsd extends Vm {
+  get xhyveArgs(): string[] {
+    return super.xhyveArgs.concat(
+      '-f', `fbsd,${this.options.userboot},${this.options.diskImage},`
+    )
+  }
 }
 
 async function getIpAddressFromArp(macAddress: string): Promise<string> {
