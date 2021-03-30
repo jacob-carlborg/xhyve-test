@@ -63,17 +63,9 @@ export default class Action {
       throw Error('Failed to get the home direcory')
 
     const sshDirectory = path.join(homeDirectory, '.ssh')
-    try {
+
+    if (!fs.existsSync(sshDirectory))
       fs.mkdirSync(sshDirectory, {recursive: true, mode: 0o700})
-    } catch (error) {
-      if (error instanceof SystemError) {
-        let e: SystemError = error
-        if (e.code != 'EEXIST') // ignore the error if the directory already exists
-          throw error
-      }
-      else
-        throw error
-    }
 
     fs.appendFileSync(
       path.join(sshDirectory, 'config'),

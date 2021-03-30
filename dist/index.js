@@ -49,6 +49,7 @@ class Action {
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug("Running action");
             const resourcesArchivePath = yield this.downloadResources();
             const resourcesDirectory = yield this.unarchiveResoruces(resourcesArchivePath);
             const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519');
@@ -81,16 +82,19 @@ class Action {
         });
     }
     configSSH(sshKey) {
+        core.debug('Configuring SSH');
         const homeDirectory = process.env['HOME'];
         if (homeDirectory === undefined)
             throw Error('Failed to get the home direcory');
         const sshDirectory = path.join(homeDirectory, '.ssh');
-        fs.mkdirSync(sshDirectory, { mode: 0o700 });
+        if (!fs.existsSync(sshDirectory))
+            fs.mkdirSync(sshDirectory, { recursive: true, mode: 0o700 });
         fs.appendFileSync(path.join(sshDirectory, 'config'), 'StrictHostKeyChecking=accept-new');
         fs.chmodSync(sshKey, 0o600);
     }
     convertToRawDisk(resourcesDirectory) {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug('Converting qcow2 image to raw');
             const resDir = resourcesDirectory.toString();
             yield exec.exec(path.join(resDir, 'qemu-img'), [
                 'convert',
@@ -229,6 +233,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.extractIpAddress = exports.Vm = void 0;
+const core = __importStar(__webpack_require__(186));
 const exec = __importStar(__webpack_require__(514));
 const child_process_1 = __webpack_require__(129);
 const wait_1 = __webpack_require__(817);
@@ -239,6 +244,7 @@ class Vm {
         this.options = options;
     }
     static getVm(type) {
+        core.debug(`Vm.getVm: ${type}`);
         switch (type) {
             case 0 /* freeBsd */:
                 return FreeBsd;
@@ -246,22 +252,26 @@ class Vm {
     }
     init() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug('Initializing VM');
             this.macAddress = yield this.getMacAddress();
         });
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug('Booting VM');
             child_process_1.spawn('sudo', this.xhyveArgs, { detached: true });
             this.ipAddress = yield getIpAddressFromArp(this.macAddress);
         });
     }
     stop() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug("Shuting down VM");
             yield this.execute('shutdown -h -p now');
         });
     }
     execute(command) {
         return __awaiter(this, void 0, void 0, function* () {
+            core.info(`Executing command inside VM: ${command}`);
             const buffer = Buffer.from(command);
             yield exec.exec('ssh', ['-i', this.sshKey.toString(), `root@${this.ipAddress}`], {
                 input: buffer
@@ -270,6 +280,7 @@ class Vm {
     }
     getMacAddress() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug("Getting MAC address");
             return (this.macAddress = yield execWithOutput('sudo', this.xhyveArgs.concat('-M')));
         });
     }
@@ -293,6 +304,7 @@ class Vm {
 exports.Vm = Vm;
 function extractIpAddress(arpOutput, macAddress) {
     var _a;
+    core.debug("Extracing IP address");
     const result = (_a = arpOutput
         .split('\n')
         .find(e => e.includes(macAddress))) === null || _a === void 0 ? void 0 : _a.match(/\((.+)\)/);
