@@ -3,7 +3,6 @@ import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import {spawn} from 'child_process'
 import {wait} from './wait'
-import {countReset} from 'console'
 
 export interface Options {
   memory: string

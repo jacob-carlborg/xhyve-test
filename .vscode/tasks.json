@@ -4,39 +4,21 @@
 		{
 			"type": "npm",
 			"script": "build",
+			"problemMatcher": [
+				"$tsc"
+			],
 			"group": "build",
-			"problemMatcher": [],
 			"label": "npm: build",
 			"detail": "tsc"
 		},
 		{
 			"type": "npm",
-			"script": "format",
-			"problemMatcher": [],
-			"label": "npm: format",
-			"detail": "prettier --write **/*.ts"
-		},
-		{
-			"type": "npm",
 			"script": "lint",
-			"problemMatcher": [],
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
 			"label": "npm: lint",
 			"detail": "eslint src/**/*.ts"
-		},
-		{
-			"type": "npm",
-			"script": "package",
-			"problemMatcher": [],
-			"label": "npm: package",
-			"detail": "ncc build --source-map --license licenses.txt"
-		},
-		{
-			"type": "npm",
-			"script": "test",
-			"group": "test",
-			"problemMatcher": [],
-			"label": "npm: test",
-			"detail": "jest"
 		}
 	]
 }

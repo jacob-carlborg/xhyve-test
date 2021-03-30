@@ -7,12 +7,6 @@ import * as exec from '@actions/exec'
 
 import * as xhyve from './xhyve_vm'
 
-interface SystemError extends Error {
-  code?: string
-}
-
-declare var SystemError: ErrorConstructor
-
 export default class Action {
   private readonly resourceUrl =
     'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar'

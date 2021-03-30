@@ -5,21 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Test",
             "type": "pwa-node",
             "request": "launch",
-            "name": "Test",
             "sourceMaps": true,
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
             "preLaunchTask": "npm: build",
             "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "test"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ]
+            "runtimeArgs": ["test"],
+            "skipFiles": ["<node_internals>/**"],
+            "outFiles": ["${workspaceFolder}/**/*.js"]
         }
     ]
 }
