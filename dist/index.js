@@ -313,7 +313,7 @@ function extractIpAddress(arpOutput, macAddress) {
 exports.extractIpAddress = extractIpAddress;
 class FreeBsd extends Vm {
     get xhyveArgs() {
-        return super.xhyveArgs.concat(`-f fbsd,${this.options.userboot},${this.options.diskImage},`);
+        return super.xhyveArgs.concat('-f', `fbsd,${this.options.userboot},${this.options.diskImage},`);
     }
 }
 function execWithOutput(commandLine, args) {

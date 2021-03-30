@@ -108,7 +108,7 @@ export function extractIpAddress(
 class FreeBsd extends Vm {
   get xhyveArgs(): string[] {
     return super.xhyveArgs.concat(
-      `-f fbsd,${this.options.userboot},${this.options.diskImage},`
+      '-f', `fbsd,${this.options.userboot},${this.options.diskImage},`
     )
   }
 }
