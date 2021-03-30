@@ -49,7 +49,7 @@ class Action {
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
-            core.debug("Running action");
+            core.debug('Running action');
             const resourcesArchivePath = yield this.downloadResources();
             const resourcesDirectory = yield this.unarchiveResoruces(resourcesArchivePath);
             const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519');
@@ -265,7 +265,7 @@ class Vm {
     }
     stop() {
         return __awaiter(this, void 0, void 0, function* () {
-            core.debug("Shuting down VM");
+            core.debug('Shuting down VM');
             yield this.execute('shutdown -h -p now');
         });
     }
@@ -280,7 +280,7 @@ class Vm {
     }
     getMacAddress() {
         return __awaiter(this, void 0, void 0, function* () {
-            core.debug("Getting MAC address");
+            core.debug('Getting MAC address');
             return (this.macAddress = yield execWithOutput('sudo', this.xhyveArgs.concat('-M')));
         });
     }
@@ -304,7 +304,7 @@ class Vm {
 exports.Vm = Vm;
 function extractIpAddress(arpOutput, macAddress) {
     var _a;
-    core.debug("Extracing IP address");
+    core.debug('Extracing IP address');
     const matchResult = (_a = arpOutput
         .split('\n')
         .find(e => e.includes(macAddress))) === null || _a === void 0 ? void 0 : _a.match(/\((.+)\)/);
@@ -315,7 +315,7 @@ function extractIpAddress(arpOutput, macAddress) {
 exports.extractIpAddress = extractIpAddress;
 function execWithOutput(commandLine, args) {
     return __awaiter(this, void 0, void 0, function* () {
-        let output;
+        let output = '';
         const exitCode = yield exec.exec(commandLine, args, {
             listeners: {
                 stdout: buffer => (output += buffer.toString())
@@ -323,12 +323,13 @@ function execWithOutput(commandLine, args) {
         });
         if (exitCode !== 0)
             throw Error(`Failed to executed command: ${commandLine} ${args === null || args === void 0 ? void 0 : args.join(' ')}`);
-        return output;
+        return output.toString();
     });
 }
 exports.execWithOutput = execWithOutput;
 class FreeBsd extends Vm {
     get xhyveArgs() {
+        // prettier-ignore
         return super.xhyveArgs.concat('-f', `fbsd,${this.options.userboot},${this.options.diskImage},`);
     }
 }
