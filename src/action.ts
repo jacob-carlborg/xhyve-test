@@ -7,6 +7,12 @@ import * as exec from '@actions/exec'
 
 import * as xhyve from './xhyve_vm'
 
+interface SystemError extends Error {
+  code?: string
+}
+
+declare var SystemError: ErrorConstructor;
+
 export default class Action {
   private readonly resourceUrl =
     'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar'
@@ -14,6 +20,7 @@ export default class Action {
   private readonly targetDiskName = 'disk.raw'
 
   async run(): Promise<void> {
+    core.debug("Running action")
     const resourcesArchivePath = await this.downloadResources()
     const resourcesDirectory = await this.unarchiveResoruces(
       resourcesArchivePath
@@ -49,13 +56,25 @@ export default class Action {
   }
 
   configSSH(sshKey: fs.PathLike): void {
+    core.debug('Configuring SSH')
     const homeDirectory = process.env['HOME']
 
     if (homeDirectory === undefined)
       throw Error('Failed to get the home direcory')
 
     const sshDirectory = path.join(homeDirectory, '.ssh')
-    fs.mkdirSync(sshDirectory, {mode: 0o700})
+    try {
+      fs.mkdirSync(sshDirectory, {recursive: true, mode: 0o700})
+    } catch (error) {
+      if (error instanceof SystemError) {
+        let e: SystemError = error
+        if (e.code != 'EEXIST') // ignore the error if the directory already exists
+          throw error
+      }
+      else
+        throw error
+    }
+
     fs.appendFileSync(
       path.join(sshDirectory, 'config'),
       'StrictHostKeyChecking=accept-new'
@@ -65,6 +84,7 @@ export default class Action {
   }
 
   async convertToRawDisk(resourcesDirectory: fs.PathLike): Promise<void> {
+    core.debug('Converting qcow2 image to raw')
     const resDir = resourcesDirectory.toString()
     await exec.exec(path.join(resDir, 'qemu-img'), [
       'convert',

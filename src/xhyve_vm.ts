@@ -1,7 +1,9 @@
+import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import {spawn} from 'child_process'
 import {wait} from './wait'
+import { countReset } from 'console'
 
 export interface Options {
   memory: string
@@ -29,6 +31,7 @@ export class Vm {
   }
 
   static getVm(type: Type): typeof Vm {
+    core.debug(`Vm.getVm: ${type}`)
     switch (type) {
       case Type.freeBsd:
         return FreeBsd
@@ -36,19 +39,23 @@ export class Vm {
   }
 
   async init(): Promise<void> {
+    core.debug('Initializing VM')
     this.macAddress = await this.getMacAddress()
   }
 
   async run(): Promise<void> {
+    core.debug('Booting VM')
     spawn('sudo', this.xhyveArgs, {detached: true})
     this.ipAddress = await getIpAddressFromArp(this.macAddress)
   }
 
   async stop(): Promise<void> {
+    core.debug("Shuting down VM")
     await this.execute('shutdown -h -p now')
   }
 
   async execute(command: string): Promise<void> {
+    core.info(`Executing command inside VM: ${command}`)
     const buffer = Buffer.from(command)
     await exec.exec(
       'ssh',
@@ -60,6 +67,7 @@ export class Vm {
   }
 
   async getMacAddress(): Promise<string> {
+    core.debug("Getting MAC address")
     return (this.macAddress = await execWithOutput(
       'sudo',
       this.xhyveArgs.concat('-M')
@@ -88,6 +96,7 @@ export function extractIpAddress(
   arpOutput: string,
   macAddress: string
 ): string | undefined {
+  core.debug("Extracing IP address")
   const result = arpOutput
     .split('\n')
     .find(e => e.includes(macAddress))
