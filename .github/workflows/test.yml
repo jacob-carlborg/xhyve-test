@@ -5,6 +5,7 @@ on: # rebuild any PRs and main branch changes
     branches:
       - main
       - 'releases/*'
+      - '*'
 
 jobs:
   # build: # make sure build/ci work properly
@@ -16,12 +17,13 @@ jobs:
   #     - run: |
   #         npm run all
   test: # make sure the action works on a clean machine without building
-    runs-on: ubuntu-latest
+    runs-on: macos-10.15
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          path: action
+          persist-credentials: false
+          # path: action
       - uses: ./
         with:
           milliseconds: 1000
