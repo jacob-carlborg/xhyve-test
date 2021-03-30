@@ -18,7 +18,7 @@ test('extractIpAddress - finding IP address', () => {
     '? (10.40.0.124) at 0:50:56:82:3a:90 on en0 ifscope [ethernet]',
     '? (10.40.0.127) at ff:ff:ff:ff:ff:ff on en0 ifscope [ethernet]',
     `? (${ipAddress}) at ${macAddress} on bridge100 ifscope [bridge]`,
-    '? (224.0.0.251) at 1:0:5e:0:0:fb on en0 ifscope permanent [ethernet]',
+    '? (224.0.0.251) at 1:0:5e:0:0:fb on en0 ifscope permanent [ethernet]'
   ].join('\n')
 
   expect(xhyve.extractIpAddress(arpOutput, macAddress)).toBe(ipAddress)

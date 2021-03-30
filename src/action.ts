@@ -11,7 +11,7 @@ interface SystemError extends Error {
   code?: string
 }
 
-declare var SystemError: ErrorConstructor;
+declare var SystemError: ErrorConstructor
 
 export default class Action {
   private readonly resourceUrl =
@@ -20,7 +20,7 @@ export default class Action {
   private readonly targetDiskName = 'disk.raw'
 
   async run(): Promise<void> {
-    core.debug("Running action")
+    core.debug('Running action')
     const resourcesArchivePath = await this.downloadResources()
     const resourcesDirectory = await this.unarchiveResoruces(
       resourcesArchivePath

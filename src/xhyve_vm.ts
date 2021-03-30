@@ -3,7 +3,7 @@ import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import {spawn} from 'child_process'
 import {wait} from './wait'
-import { countReset } from 'console'
+import {countReset} from 'console'
 
 export interface Options {
   memory: string
@@ -50,7 +50,7 @@ export class Vm {
   }
 
   async stop(): Promise<void> {
-    core.debug("Shuting down VM")
+    core.debug('Shuting down VM')
     await this.execute('shutdown -h -p now')
   }
 
@@ -67,7 +67,7 @@ export class Vm {
   }
 
   async getMacAddress(): Promise<string> {
-    core.debug("Getting MAC address")
+    core.debug('Getting MAC address')
     return (this.macAddress = await execWithOutput(
       'sudo',
       this.xhyveArgs.concat('-M')
@@ -96,7 +96,7 @@ export function extractIpAddress(
   arpOutput: string,
   macAddress: string
 ): string | undefined {
-  core.debug("Extracing IP address")
+  core.debug('Extracing IP address')
   const matchResult = arpOutput
     .split('\n')
     .find(e => e.includes(macAddress))
@@ -112,11 +112,11 @@ export async function execWithOutput(
   commandLine: string,
   args?: string[]
 ): Promise<string> {
-  let output = ""
+  let output = ''
 
   const exitCode = await exec.exec(commandLine, args, {
     listeners: {
-      stdout: buffer => output += buffer.toString()
+      stdout: buffer => (output += buffer.toString())
     }
   })
 
@@ -128,6 +128,7 @@ export async function execWithOutput(
 
 class FreeBsd extends Vm {
   get xhyveArgs(): string[] {
+    // prettier-ignore
     return super.xhyveArgs.concat(
       '-f', `fbsd,${this.options.userboot},${this.options.diskImage},`
     )
