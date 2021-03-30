@@ -305,10 +305,12 @@ exports.Vm = Vm;
 function extractIpAddress(arpOutput, macAddress) {
     var _a;
     core.debug("Extracing IP address");
-    const result = (_a = arpOutput
+    const matchResult = (_a = arpOutput
         .split('\n')
         .find(e => e.includes(macAddress))) === null || _a === void 0 ? void 0 : _a.match(/\((.+)\)/);
-    return result ? result[1] : undefined;
+    const ipAddress = matchResult ? matchResult[1] : undefined;
+    core.debug(`Found IP address: ${ipAddress}`);
+    return ipAddress;
 }
 exports.extractIpAddress = extractIpAddress;
 class FreeBsd extends Vm {

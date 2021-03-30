@@ -97,12 +97,15 @@ export function extractIpAddress(
   macAddress: string
 ): string | undefined {
   core.debug("Extracing IP address")
-  const result = arpOutput
+  const matchResult = arpOutput
     .split('\n')
     .find(e => e.includes(macAddress))
     ?.match(/\((.+)\)/)
 
-  return result ? result[1] : undefined
+  const ipAddress = matchResult ? matchResult[1] : undefined
+  core.debug(`Found IP address: ${ipAddress}`)
+
+  return ipAddress
 }
 
 class FreeBsd extends Vm {
