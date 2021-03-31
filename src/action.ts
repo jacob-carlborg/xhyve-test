@@ -61,9 +61,13 @@ export default class Action {
     if (!fs.existsSync(sshDirectory))
       fs.mkdirSync(sshDirectory, {recursive: true, mode: 0o700})
 
+    // prettier-ignore
     fs.appendFileSync(
       path.join(sshDirectory, 'config'),
-      'StrictHostKeyChecking=accept-new'
+      [
+        'StrictHostKeyChecking=accept-new',
+        'SendEnv CI GITHUB_*'
+      ].join('\n')
     )
 
     fs.chmodSync(sshKey, 0o600)

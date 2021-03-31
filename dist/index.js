@@ -89,7 +89,11 @@ class Action {
         const sshDirectory = path.join(homeDirectory, '.ssh');
         if (!fs.existsSync(sshDirectory))
             fs.mkdirSync(sshDirectory, { recursive: true, mode: 0o700 });
-        fs.appendFileSync(path.join(sshDirectory, 'config'), 'StrictHostKeyChecking=accept-new');
+        // prettier-ignore
+        fs.appendFileSync(path.join(sshDirectory, 'config'), [
+            'StrictHostKeyChecking=accept-new',
+            'SendEnv CI GITHUB_*'
+        ].join('\n'));
         fs.chmodSync(sshKey, 0o600);
     }
     convertToRawDisk(resourcesDirectory) {
@@ -273,9 +277,13 @@ class Vm {
         return __awaiter(this, void 0, void 0, function* () {
             core.info(`Executing command inside VM: ${command}`);
             const buffer = Buffer.from(command);
-            yield exec.exec('ssh', ['-tt', '-i', this.sshKey.toString(), `root@${this.ipAddress}`], {
-                input: buffer
-            });
+            // prettier-ignore
+            yield exec.exec('ssh', [
+                '-tt',
+                '-i', this.sshKey.toString(),
+                `root@${this.ipAddress}`,
+                "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
+            ], { input: buffer });
         });
     }
     getMacAddress() {

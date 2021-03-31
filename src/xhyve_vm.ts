@@ -56,12 +56,16 @@ export class Vm {
   async execute(command: string): Promise<void> {
     core.info(`Executing command inside VM: ${command}`)
     const buffer = Buffer.from(command)
+
+    // prettier-ignore
     await exec.exec(
-      'ssh',
-      ['-tt', '-i', this.sshKey.toString(), `root@${this.ipAddress}`],
-      {
-        input: buffer
-      }
+      'ssh',[
+        '-tt',
+        '-i', this.sshKey.toString(),
+        `root@${this.ipAddress}`,
+        "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
+      ],
+      {input: buffer}
     )
   }
 
