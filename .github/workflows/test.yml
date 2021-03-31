@@ -21,14 +21,14 @@ jobs:
     # runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        env:
-          ACTIONS_STEP_DEBUG: 1
-          RUNNER_DEBUG: 1
         uses: actions/checkout@v2
         with:
           persist-credentials: false
           # path: action
       # - run: apt update && apt install -y net-tools
       - uses: ./
+        env:
+          ACTIONS_STEP_DEBUG: 1
+          RUNNER_DEBUG: 1
         with:
           milliseconds: 1000
