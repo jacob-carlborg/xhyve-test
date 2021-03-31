@@ -143,7 +143,7 @@ class FreeBsd extends Vm {
 
 async function getIpAddressFromArp(macAddress: string): Promise<string> {
   core.debug(`Getting IP address for MAC address: '${macAddress}'`)
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 500; i++) {
     const arpOutput = await execWithOutput('arp', ['-a', '-n'])
     const ipAddress = extractIpAddress(arpOutput, macAddress)
 

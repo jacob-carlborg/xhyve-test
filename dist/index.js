@@ -348,7 +348,7 @@ class FreeBsd extends Vm {
 function getIpAddressFromArp(macAddress) {
     return __awaiter(this, void 0, void 0, function* () {
         core.debug(`Getting IP address for MAC address: '${macAddress}'`);
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 500; i++) {
             const arpOutput = yield execWithOutput('arp', ['-a', '-n']);
             const ipAddress = extractIpAddress(arpOutput, macAddress);
             if (ipAddress)
