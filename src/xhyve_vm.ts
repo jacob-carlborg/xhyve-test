@@ -58,7 +58,7 @@ export class Vm {
     const buffer = Buffer.from(command)
     await exec.exec(
       'ssh',
-      ['-i', this.sshKey.toString(), `root@${this.ipAddress}`],
+      ['-tt', '-i', this.sshKey.toString(), `root@${this.ipAddress}`],
       {
         input: buffer
       }

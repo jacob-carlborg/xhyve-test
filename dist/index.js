@@ -273,7 +273,7 @@ class Vm {
         return __awaiter(this, void 0, void 0, function* () {
             core.info(`Executing command inside VM: ${command}`);
             const buffer = Buffer.from(command);
-            yield exec.exec('ssh', ['-i', this.sshKey.toString(), `root@${this.ipAddress}`], {
+            yield exec.exec('ssh', ['-tt', '-i', this.sshKey.toString(), `root@${this.ipAddress}`], {
                 input: buffer
             });
         });
