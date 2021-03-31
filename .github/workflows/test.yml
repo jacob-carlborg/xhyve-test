@@ -18,6 +18,7 @@ jobs:
   #         npm run all
   test: # make sure the action works on a clean machine without building
     runs-on: macos-10.15
+    # runs-on: ubuntu-latest
     steps:
       - name: Checkout
         env:
@@ -27,6 +28,7 @@ jobs:
         with:
           persist-credentials: false
           # path: action
+      # - run: apt update && apt install -y net-tools
       - uses: ./
         with:
           milliseconds: 1000

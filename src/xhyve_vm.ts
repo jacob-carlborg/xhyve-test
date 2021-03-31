@@ -67,10 +67,9 @@ export class Vm {
 
   async getMacAddress(): Promise<string> {
     core.debug('Getting MAC address')
-    return (this.macAddress = await execWithOutput(
-      'sudo',
-      this.xhyveArgs.concat('-M')
-    ))
+    this.macAddress = await execWithOutput('sudo', this.xhyveArgs.concat('-M'))
+    core.debug(`Found MAC address: ${this.macAddress}`)
+    return this.macAddress
   }
 
   get xhyveArgs(): string[] {
@@ -135,6 +134,7 @@ class FreeBsd extends Vm {
 }
 
 async function getIpAddressFromArp(macAddress: string): Promise<string> {
+  core.debug(`Getting IP address for MAC address: ${macAddress}`)
   for (let i = 0; i < 100; i++) {
     const arpOutput = await execWithOutput('arp', ['-a', '-n'])
     const ipAddress = extractIpAddress(arpOutput, macAddress)

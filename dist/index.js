@@ -281,7 +281,9 @@ class Vm {
     getMacAddress() {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug('Getting MAC address');
-            return (this.macAddress = yield execWithOutput('sudo', this.xhyveArgs.concat('-M')));
+            this.macAddress = yield execWithOutput('sudo', this.xhyveArgs.concat('-M'));
+            core.debug(`Found MAC address: ${this.macAddress}`);
+            return this.macAddress;
         });
     }
     get xhyveArgs() {
@@ -335,6 +337,7 @@ class FreeBsd extends Vm {
 }
 function getIpAddressFromArp(macAddress) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.debug(`Getting IP address for MAC address: ${macAddress}`);
         for (let i = 0; i < 100; i++) {
             const arpOutput = yield execWithOutput('arp', ['-a', '-n']);
             const ipAddress = extractIpAddress(arpOutput, macAddress);
