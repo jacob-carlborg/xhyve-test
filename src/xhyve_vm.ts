@@ -83,11 +83,13 @@ export abstract class Vm {
     command: string,
     options: ExecuteOptions = {}
   ): Promise<number> {
+    const defaultOptions = {log: true}
+    options = {...defaultOptions, ...options}
     if (options.log) core.info(`Executing command inside VM: ${command}`)
     const buffer = Buffer.from(command)
 
     return await exec.exec(
-      `ssh -t -i ${this.sshKey} root@${this.ipAddress}`,
+      `ssh -tt -i ${this.sshKey} root@${this.ipAddress}`,
       [],
       {
         input: buffer,
@@ -184,7 +186,7 @@ class FreeBsd extends Vm {
 }
 
 async function getIpAddressFromArp(macAddress: string): Promise<string> {
-  core.info(`Getting IP address for MAC address: '${macAddress}'`)
+  core.info(`Getting IP address for MAC address: ${macAddress}`)
   for (let i = 0; i < 500; i++) {
     const arpOutput = await execWithOutput('arp', ['-a', '-n'], {silent: true})
     const ipAddress = extractIpAddress(arpOutput, macAddress)
