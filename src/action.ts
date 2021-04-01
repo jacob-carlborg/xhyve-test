@@ -17,6 +17,7 @@ export default class Action {
   async run(): Promise<void> {
     core.debug('Running action')
     const resourcesArchivePath = await this.downloadResources()
+    core.info(`Downloaded file: ${resourcesArchivePath}`)
     const resourcesDirectory = await this.unarchiveResoruces(
       resourcesArchivePath
     )
@@ -35,8 +36,11 @@ export default class Action {
     })
 
     await vm.init()
+    core.info('Booting VM')
     await vm.run()
+    core.info('Waiting for VM to be ready')
     await wait(10_000)
+    core.info('VM is ready')
     await vm.execute('freebsd-version')
     // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
     await vm.stop()
@@ -64,15 +68,12 @@ export default class Action {
     if (!fs.existsSync(sshDirectory))
       fs.mkdirSync(sshDirectory, {recursive: true, mode: 0o700})
 
-    // prettier-ignore
-    fs.appendFileSync(
-      path.join(sshDirectory, 'config'),
-      [
-        'StrictHostKeyChecking=accept-new',
-        'SendEnv CI GITHUB_*'
-      ].join('\n') + "\n"
-    )
+    const lines = [
+      'StrictHostKeyChecking=accept-new',
+      'SendEnv CI GITHUB_*'
+    ].join('\n')
 
+    fs.appendFileSync(path.join(sshDirectory, 'config'), `${lines}\n`)
     fs.chmodSync(sshKey, 0o600)
   }
 
