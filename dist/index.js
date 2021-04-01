@@ -276,16 +276,13 @@ class Vm {
             yield this.execute('shutdown -h -p now');
         });
     }
-    execute(command) {
+    execute(command, description = '') {
         return __awaiter(this, void 0, void 0, function* () {
+            core.info(description);
             core.info(`Executing command inside VM: ${command}`);
             const buffer = Buffer.from(command);
             // prettier-ignore
-            yield exec.exec('ssh', [
-                '-tt',
-                '-i', this.sshKey.toString(),
-                `root@${this.ipAddress}`
-            ], { input: buffer });
+            yield exec.exec(`ssh -t -i ${this.sshKey} root@${this.ipAddress}`, [], { input: buffer });
         });
     }
     getMacAddress() {

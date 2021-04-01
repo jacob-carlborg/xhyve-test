@@ -53,19 +53,13 @@ export class Vm {
     await this.execute('shutdown -h -p now')
   }
 
-  async execute(command: string): Promise<void> {
+  async execute(command: string, description = ''): Promise<void> {
+    core.info(description)
     core.info(`Executing command inside VM: ${command}`)
     const buffer = Buffer.from(command)
 
     // prettier-ignore
-    await exec.exec(
-      'ssh',[
-        '-tt',
-        '-i', this.sshKey.toString(),
-        `root@${this.ipAddress}`
-      ],
-      {input: buffer}
-    )
+    await exec.exec(`ssh -t -i ${this.sshKey} root@${this.ipAddress}`, [], {input: buffer})
   }
 
   async getMacAddress(): Promise<string> {
