@@ -272,8 +272,8 @@ class Vm {
     }
     wait(timeout) {
         return __awaiter(this, void 0, void 0, function* () {
-            core.info('Waiting for VM be ready');
             for (let index = 0; index < timeout; index++) {
+                core.info('Waiting for VM be ready...');
                 const result = yield this.execute('true', {
                     log: false,
                     silent: true,
@@ -306,7 +306,7 @@ class Vm {
             if (options.log)
                 core.info(`Executing command inside VM: ${command}`);
             const buffer = Buffer.from(command);
-            return yield exec.exec(`ssh -tt -i ${this.sshKey} root@${this.ipAddress}`, [], {
+            return yield exec.exec(`ssh -t -i ${this.sshKey} root@${this.ipAddress}`, [], {
                 input: buffer,
                 silent: options.silent,
                 ignoreReturnCode: options.ignoreReturnCode
@@ -384,6 +384,7 @@ function getIpAddressFromArp(macAddress) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Getting IP address for MAC address: ${macAddress}`);
         for (let i = 0; i < 500; i++) {
+            core.info('Waiting for IP to become available...');
             const arpOutput = yield execWithOutput('arp', ['-a', '-n'], { silent: true });
             const ipAddress = extractIpAddress(arpOutput, macAddress);
             if (ipAddress)

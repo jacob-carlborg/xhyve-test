@@ -49,9 +49,9 @@ export abstract class Vm {
   }
 
   async wait(timeout: number): Promise<void> {
-    core.info('Waiting for VM be ready')
-
     for (let index = 0; index < timeout; index++) {
+      core.info('Waiting for VM be ready...')
+
       const result = await this.execute('true', {
         log: false,
         silent: true,
@@ -89,7 +89,7 @@ export abstract class Vm {
     const buffer = Buffer.from(command)
 
     return await exec.exec(
-      `ssh -tt -i ${this.sshKey} root@${this.ipAddress}`,
+      `ssh -t -i ${this.sshKey} root@${this.ipAddress}`,
       [],
       {
         input: buffer,
@@ -188,6 +188,7 @@ class FreeBsd extends Vm {
 async function getIpAddressFromArp(macAddress: string): Promise<string> {
   core.info(`Getting IP address for MAC address: ${macAddress}`)
   for (let i = 0; i < 500; i++) {
+    core.info('Waiting for IP to become available...')
     const arpOutput = await execWithOutput('arp', ['-a', '-n'], {silent: true})
     const ipAddress = extractIpAddress(arpOutput, macAddress)
 
