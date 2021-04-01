@@ -42,7 +42,6 @@ const cache = __importStar(__webpack_require__(784));
 const core = __importStar(__webpack_require__(186));
 const exec = __importStar(__webpack_require__(514));
 const xhyve = __importStar(__webpack_require__(722));
-const wait_1 = __webpack_require__(817);
 class Action {
     constructor() {
         this.resourceUrl = 'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar';
@@ -52,6 +51,7 @@ class Action {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug('Running action');
             const resourcesArchivePath = yield this.downloadResources();
+            core.info(`Downloaded file: ${resourcesArchivePath}`);
             const resourcesDirectory = yield this.unarchiveResoruces(resourcesArchivePath);
             const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519');
             this.configSSH(sshKeyPath);
@@ -66,7 +66,7 @@ class Action {
             });
             yield vm.init();
             yield vm.run();
-            yield wait_1.wait(10000);
+            yield vm.wait(10);
             yield vm.execute('freebsd-version');
             // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
             yield vm.stop();
@@ -92,11 +92,11 @@ class Action {
         const sshDirectory = path.join(homeDirectory, '.ssh');
         if (!fs.existsSync(sshDirectory))
             fs.mkdirSync(sshDirectory, { recursive: true, mode: 0o700 });
-        // prettier-ignore
-        fs.appendFileSync(path.join(sshDirectory, 'config'), [
+        const lines = [
             'StrictHostKeyChecking=accept-new',
             'SendEnv CI GITHUB_*'
-        ].join('\n') + "\n");
+        ].join('\n');
+        fs.appendFileSync(path.join(sshDirectory, 'config'), `${lines}\n`);
         fs.chmodSync(sshKey, 0o600);
     }
     convertToRawDisk(resourcesDirectory) {
@@ -259,36 +259,62 @@ class Vm {
     }
     init() {
         return __awaiter(this, void 0, void 0, function* () {
-            core.debug('Initializing VM');
+            core.info('Initializing VM');
             this.macAddress = yield this.getMacAddress();
         });
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
-            core.debug('Booting VM');
+            core.info('Booting VM');
             child_process_1.spawn('sudo', this.xhyveArgs, { detached: true });
             this.ipAddress = yield getIpAddressFromArp(this.macAddress);
         });
     }
-    stop() {
+    wait(timeout) {
         return __awaiter(this, void 0, void 0, function* () {
-            core.debug('Shuting down VM');
-            yield this.execute('shutdown -h -p now');
+            core.info('Waiting for VM be ready');
+            for (let index = 0; index < timeout; index++) {
+                const result = yield this.execute('true', {
+                    log: false,
+                    silent: true,
+                    ignoreReturnCode: true
+                });
+                if (result === 0) {
+                    core.info('VM is ready');
+                    return;
+                }
+                yield wait_1.wait(1000);
+            }
+            throw Error(`Waiting for VM to become ready timed out after ${timeout} seconds`);
         });
     }
-    execute(command, description = '') {
+    stop() {
         return __awaiter(this, void 0, void 0, function* () {
-            core.info(description);
-            core.info(`Executing command inside VM: ${command}`);
+            core.info('Shuting down VM');
+            yield this.shutdown();
+        });
+    }
+    shutdown() {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw Error('Not implemented');
+        });
+    }
+    execute(command, options = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (options.log)
+                core.info(`Executing command inside VM: ${command}`);
             const buffer = Buffer.from(command);
-            // prettier-ignore
-            yield exec.exec(`ssh -t -i ${this.sshKey} root@${this.ipAddress}`, [], { input: buffer });
+            return yield exec.exec(`ssh -t -i ${this.sshKey} root@${this.ipAddress}`, [], {
+                input: buffer,
+                silent: options.silent,
+                ignoreReturnCode: options.ignoreReturnCode
+            });
         });
     }
     getMacAddress() {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug('Getting MAC address');
-            this.macAddress = (yield execWithOutput('sudo', this.xhyveArgs.concat('-M')))
+            this.macAddress = (yield execWithOutput('sudo', this.xhyveArgs.concat('-M'), { silent: true }))
                 .trim()
                 .slice(5);
             core.debug(`Found MAC address: '${this.macAddress}'`);
@@ -325,10 +351,12 @@ function extractIpAddress(arpOutput, macAddress) {
     return ipAddress;
 }
 exports.extractIpAddress = extractIpAddress;
-function execWithOutput(commandLine, args) {
+function execWithOutput(commandLine, args, options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
         let output = '';
         const exitCode = yield exec.exec(commandLine, args, {
+            silent: options.silent,
+            ignoreReturnCode: options.ignoreReturnCode,
             listeners: {
                 stdout: buffer => (output += buffer.toString())
             }
@@ -344,12 +372,17 @@ class FreeBsd extends Vm {
         // prettier-ignore
         return super.xhyveArgs.concat('-f', `fbsd,${this.options.userboot},${this.options.diskImage},`);
     }
+    shutdown() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.execute('shutdown -p now');
+        });
+    }
 }
 function getIpAddressFromArp(macAddress) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.debug(`Getting IP address for MAC address: '${macAddress}'`);
+        core.info(`Getting IP address for MAC address: '${macAddress}'`);
         for (let i = 0; i < 500; i++) {
-            const arpOutput = yield execWithOutput('arp', ['-a', '-n']);
+            const arpOutput = yield execWithOutput('arp', ['-a', '-n'], { silent: true });
             const ipAddress = extractIpAddress(arpOutput, macAddress);
             if (ipAddress)
                 return ipAddress;

@@ -6,7 +6,6 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 
 import * as xhyve from './xhyve_vm'
-import {wait} from './wait'
 
 export default class Action {
   private readonly resourceUrl =
@@ -36,11 +35,8 @@ export default class Action {
     })
 
     await vm.init()
-    core.info('Booting VM')
     await vm.run()
-    core.info('Waiting for VM to be ready')
-    await wait(10_000)
-    core.info('VM is ready')
+    await vm.wait(10)
     await vm.execute('freebsd-version')
     // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
     await vm.stop()

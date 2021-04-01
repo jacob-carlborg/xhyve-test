@@ -16,7 +16,7 @@ export const enum Type {
   freeBsd
 }
 
-export class Vm {
+export abstract class Vm {
   macAddress!: string
   ipAddress!: string
   private sshKey: fs.PathLike
@@ -29,7 +29,7 @@ export class Vm {
     this.options = options
   }
 
-  static getVm(type: Type): typeof Vm {
+  static getVm(type: Type): typeof FreeBsd {
     core.debug(`Vm.getVm: ${type}`)
     switch (type) {
       case Type.freeBsd:
@@ -38,34 +38,69 @@ export class Vm {
   }
 
   async init(): Promise<void> {
-    core.debug('Initializing VM')
+    core.info('Initializing VM')
     this.macAddress = await this.getMacAddress()
   }
 
   async run(): Promise<void> {
-    core.debug('Booting VM')
+    core.info('Booting VM')
     spawn('sudo', this.xhyveArgs, {detached: true})
     this.ipAddress = await getIpAddressFromArp(this.macAddress)
   }
 
-  async stop(): Promise<void> {
-    core.debug('Shuting down VM')
-    await this.execute('shutdown -h -p now')
+  async wait(timeout: number): Promise<void> {
+    core.info('Waiting for VM be ready')
+
+    for (let index = 0; index < timeout; index++) {
+      const result = await this.execute('true', {
+        log: false,
+        silent: true,
+        ignoreReturnCode: true
+      })
+
+      if (result === 0) {
+        core.info('VM is ready')
+        return
+      }
+      await wait(1000)
+    }
+
+    throw Error(
+      `Waiting for VM to become ready timed out after ${timeout} seconds`
+    )
   }
 
-  async execute(command: string, description = ''): Promise<void> {
-    core.info(description)
-    core.info(`Executing command inside VM: ${command}`)
+  async stop(): Promise<void> {
+    core.info('Shuting down VM')
+    await this.shutdown()
+  }
+
+  async shutdown(): Promise<void> {
+    throw Error('Not implemented')
+  }
+
+  async execute(
+    command: string,
+    options: ExecuteOptions = {}
+  ): Promise<number> {
+    if (options.log) core.info(`Executing command inside VM: ${command}`)
     const buffer = Buffer.from(command)
 
-    // prettier-ignore
-    await exec.exec(`ssh -t -i ${this.sshKey} root@${this.ipAddress}`, [], {input: buffer})
+    return await exec.exec(
+      `ssh -t -i ${this.sshKey} root@${this.ipAddress}`,
+      [],
+      {
+        input: buffer,
+        silent: options.silent,
+        ignoreReturnCode: options.ignoreReturnCode
+      }
+    )
   }
 
   async getMacAddress(): Promise<string> {
     core.debug('Getting MAC address')
     this.macAddress = (
-      await execWithOutput('sudo', this.xhyveArgs.concat('-M'))
+      await execWithOutput('sudo', this.xhyveArgs.concat('-M'), {silent: true})
     )
       .trim()
       .slice(5)
@@ -110,11 +145,14 @@ export function extractIpAddress(
 
 export async function execWithOutput(
   commandLine: string,
-  args?: string[]
+  args?: string[],
+  options: ExecuteOptions = {}
 ): Promise<string> {
   let output = ''
 
   const exitCode = await exec.exec(commandLine, args, {
+    silent: options.silent,
+    ignoreReturnCode: options.ignoreReturnCode,
     listeners: {
       stdout: buffer => (output += buffer.toString())
     }
@@ -126,6 +164,12 @@ export async function execWithOutput(
   return output.toString()
 }
 
+interface ExecuteOptions {
+  log?: boolean
+  ignoreReturnCode?: boolean
+  silent?: boolean
+}
+
 class FreeBsd extends Vm {
   get xhyveArgs(): string[] {
     // prettier-ignore
@@ -133,12 +177,16 @@ class FreeBsd extends Vm {
       '-f', `fbsd,${this.options.userboot},${this.options.diskImage},`
     )
   }
+
+  async shutdown(): Promise<void> {
+    await this.execute('shutdown -p now')
+  }
 }
 
 async function getIpAddressFromArp(macAddress: string): Promise<string> {
-  core.debug(`Getting IP address for MAC address: '${macAddress}'`)
+  core.info(`Getting IP address for MAC address: '${macAddress}'`)
   for (let i = 0; i < 500; i++) {
-    const arpOutput = await execWithOutput('arp', ['-a', '-n'])
+    const arpOutput = await execWithOutput('arp', ['-a', '-n'], {silent: true})
     const ipAddress = extractIpAddress(arpOutput, macAddress)
 
     if (ipAddress) return ipAddress
