@@ -64,7 +64,7 @@ class Action {
                 userboot: path.join(resourcesDirectory, 'userboot.so')
             });
             yield vm.init();
-            yield vm.run();
+            // await vm.run()
             // await vm.execute('freebsd-version')
             // await vm.stop()
         });
@@ -321,7 +321,8 @@ function extractIpAddress(arpOutput, macAddress) {
         .split('\n')
         .find(e => e.includes(macAddress))) === null || _a === void 0 ? void 0 : _a.match(/\((.+)\)/);
     const ipAddress = matchResult ? matchResult[1] : undefined;
-    core.info(`Found IP address: '${ipAddress}'`);
+    if (ipAddress)
+        core.info(`Found IP address: '${ipAddress}'`);
     return ipAddress;
 }
 exports.extractIpAddress = extractIpAddress;

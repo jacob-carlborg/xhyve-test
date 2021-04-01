@@ -34,7 +34,7 @@ export default class Action {
     })
 
     await vm.init()
-    await vm.run()
+    // await vm.run()
     // await vm.execute('freebsd-version')
     // await vm.stop()
   }
