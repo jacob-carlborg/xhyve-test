@@ -109,7 +109,7 @@ export function extractIpAddress(
     ?.match(/\((.+)\)/)
 
   const ipAddress = matchResult ? matchResult[1] : undefined
-  core.debug(`Found IP address: '${ipAddress}'`)
+  core.info(`Found IP address: '${ipAddress}'`)
 
   return ipAddress
 }

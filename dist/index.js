@@ -65,8 +65,8 @@ class Action {
             });
             yield vm.init();
             yield vm.run();
-            yield vm.execute('freebsd-version');
-            yield vm.stop();
+            // await vm.execute('freebsd-version')
+            // await vm.stop()
         });
     }
     downloadResources() {
@@ -321,7 +321,7 @@ function extractIpAddress(arpOutput, macAddress) {
         .split('\n')
         .find(e => e.includes(macAddress))) === null || _a === void 0 ? void 0 : _a.match(/\((.+)\)/);
     const ipAddress = matchResult ? matchResult[1] : undefined;
-    core.debug(`Found IP address: '${ipAddress}'`);
+    core.info(`Found IP address: '${ipAddress}'`);
     return ipAddress;
 }
 exports.extractIpAddress = extractIpAddress;

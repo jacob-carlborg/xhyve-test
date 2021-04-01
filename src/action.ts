@@ -35,8 +35,8 @@ export default class Action {
 
     await vm.init()
     await vm.run()
-    await vm.execute('freebsd-version')
-    await vm.stop()
+    // await vm.execute('freebsd-version')
+    // await vm.stop()
   }
 
   async downloadResources(): Promise<string> {
