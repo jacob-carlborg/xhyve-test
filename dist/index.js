@@ -42,6 +42,7 @@ const cache = __importStar(__webpack_require__(784));
 const core = __importStar(__webpack_require__(186));
 const exec = __importStar(__webpack_require__(514));
 const xhyve = __importStar(__webpack_require__(722));
+const wait_1 = __webpack_require__(817);
 class Action {
     constructor() {
         this.resourceUrl = 'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar';
@@ -64,9 +65,11 @@ class Action {
                 userboot: path.join(resourcesDirectory, 'userboot.so')
             });
             yield vm.init();
-            // await vm.run()
-            // await vm.execute('freebsd-version')
-            // await vm.stop()
+            yield vm.run();
+            yield wait_1.wait(10000);
+            yield vm.execute('freebsd-version');
+            // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
+            yield vm.stop();
         });
     }
     downloadResources() {
@@ -93,7 +96,7 @@ class Action {
         fs.appendFileSync(path.join(sshDirectory, 'config'), [
             'StrictHostKeyChecking=accept-new',
             'SendEnv CI GITHUB_*'
-        ].join('\n'));
+        ].join('\n') + "\n");
         fs.chmodSync(sshKey, 0o600);
     }
     convertToRawDisk(resourcesDirectory) {
@@ -281,8 +284,7 @@ class Vm {
             yield exec.exec('ssh', [
                 '-tt',
                 '-i', this.sshKey.toString(),
-                `root@${this.ipAddress}`,
-                "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
+                `root@${this.ipAddress}`
             ], { input: buffer });
         });
     }

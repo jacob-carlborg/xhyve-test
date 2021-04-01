@@ -62,8 +62,7 @@ export class Vm {
       'ssh',[
         '-tt',
         '-i', this.sshKey.toString(),
-        `root@${this.ipAddress}`,
-        "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
+        `root@${this.ipAddress}`
       ],
       {input: buffer}
     )

@@ -6,6 +6,7 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 
 import * as xhyve from './xhyve_vm'
+import {wait} from './wait'
 
 export default class Action {
   private readonly resourceUrl =
@@ -34,9 +35,11 @@ export default class Action {
     })
 
     await vm.init()
-    // await vm.run()
-    // await vm.execute('freebsd-version')
-    // await vm.stop()
+    await vm.run()
+    await wait(10_000)
+    await vm.execute('freebsd-version')
+    // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
+    await vm.stop()
   }
 
   async downloadResources(): Promise<string> {
@@ -67,7 +70,7 @@ export default class Action {
       [
         'StrictHostKeyChecking=accept-new',
         'SendEnv CI GITHUB_*'
-      ].join('\n')
+      ].join('\n') + "\n"
     )
 
     fs.chmodSync(sshKey, 0o600)
