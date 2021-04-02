@@ -45,16 +45,20 @@ const xhyve = __importStar(__webpack_require__(722));
 class Action {
     constructor() {
         this.resourceUrl = 'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar';
+        this.diskImageUrl = 'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/disk.qcow2';
         this.targetDiskName = 'disk.raw';
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug('Running action');
-            const resourcesArchivePath = yield this.downloadResources();
+            const [diskImagePath, resourcesArchivePath] = yield Promise.all([
+                this.downloadDiskImage(),
+                this.downloadResources()
+            ]);
             const resourcesDirectory = yield this.unarchiveResoruces(resourcesArchivePath);
             const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519');
             this.configSSH(sshKeyPath);
-            yield this.convertToRawDisk(resourcesDirectory);
+            yield this.convertToRawDisk(diskImagePath, resourcesDirectory);
             const VmClass = xhyve.Vm.getVm(0 /* freeBsd */);
             const vm = new VmClass(sshKeyPath, path.join(resourcesDirectory, 'xhyve'), {
                 memory: '4G',
@@ -69,6 +73,14 @@ class Action {
             yield vm.execute('freebsd-version');
             // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
             yield vm.stop();
+        });
+    }
+    downloadDiskImage() {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.info(`Downloading disk image: ${this.diskImageUrl}`);
+            const result = yield cache.downloadTool(this.diskImageUrl);
+            core.info(`Downloaded file: ${result}`);
+            return result;
         });
     }
     downloadResources() {
@@ -100,7 +112,7 @@ class Action {
         fs.appendFileSync(path.join(sshDirectory, 'config'), `${lines}\n`);
         fs.chmodSync(sshKey, 0o600);
     }
-    convertToRawDisk(resourcesDirectory) {
+    convertToRawDisk(diskImage, resourcesDirectory) {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug('Converting qcow2 image to raw');
             const resDir = resourcesDirectory.toString();
@@ -110,7 +122,7 @@ class Action {
                 'qcow2',
                 '-O',
                 'raw',
-                path.join(resDir, 'disk.qcow2'),
+                diskImage.toString(),
                 path.join(resDir, this.targetDiskName)
             ]);
         });

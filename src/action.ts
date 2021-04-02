@@ -11,18 +11,24 @@ export default class Action {
   private readonly resourceUrl =
     'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar'
 
+  private readonly diskImageUrl =
+    'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/disk.qcow2'
+
   private readonly targetDiskName = 'disk.raw'
 
   async run(): Promise<void> {
     core.debug('Running action')
-    const resourcesArchivePath = await this.downloadResources()
+    const [diskImagePath, resourcesArchivePath] = await Promise.all([
+      this.downloadDiskImage(),
+      this.downloadResources()
+    ])
     const resourcesDirectory = await this.unarchiveResoruces(
       resourcesArchivePath
     )
     const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519')
     this.configSSH(sshKeyPath)
 
-    await this.convertToRawDisk(resourcesDirectory)
+    await this.convertToRawDisk(diskImagePath, resourcesDirectory)
 
     const VmClass = xhyve.Vm.getVm(xhyve.Type.freeBsd)
     const vm = new VmClass(sshKeyPath, path.join(resourcesDirectory, 'xhyve'), {
@@ -39,6 +45,14 @@ export default class Action {
     await vm.execute('freebsd-version')
     // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
     await vm.stop()
+  }
+
+  async downloadDiskImage(): Promise<string> {
+    core.info(`Downloading disk image: ${this.diskImageUrl}`)
+    const result = await cache.downloadTool(this.diskImageUrl)
+    core.info(`Downloaded file: ${result}`)
+
+    return result
   }
 
   async downloadResources(): Promise<string> {
@@ -75,7 +89,10 @@ export default class Action {
     fs.chmodSync(sshKey, 0o600)
   }
 
-  async convertToRawDisk(resourcesDirectory: fs.PathLike): Promise<void> {
+  async convertToRawDisk(
+    diskImage: fs.PathLike,
+    resourcesDirectory: fs.PathLike
+  ): Promise<void> {
     core.debug('Converting qcow2 image to raw')
     const resDir = resourcesDirectory.toString()
     await exec.exec(path.join(resDir, 'qemu-img'), [
@@ -84,7 +101,7 @@ export default class Action {
       'qcow2',
       '-O',
       'raw',
-      path.join(resDir, 'disk.qcow2'),
+      diskImage.toString(),
       path.join(resDir, this.targetDiskName)
     ])
   }
