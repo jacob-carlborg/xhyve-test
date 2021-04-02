@@ -16,7 +16,6 @@ export default class Action {
   async run(): Promise<void> {
     core.debug('Running action')
     const resourcesArchivePath = await this.downloadResources()
-    core.info(`Downloaded file: ${resourcesArchivePath}`)
     const resourcesDirectory = await this.unarchiveResoruces(
       resourcesArchivePath
     )
@@ -44,7 +43,10 @@ export default class Action {
 
   async downloadResources(): Promise<string> {
     core.info(`Downloading resources: ${this.resourceUrl}`)
-    return await cache.downloadTool(this.resourceUrl)
+    const result = await cache.downloadTool(this.resourceUrl)
+    core.info(`Downloaded file: ${result}`)
+
+    return result
   }
 
   async unarchiveResoruces(resourcesArchivePath: string): Promise<string> {

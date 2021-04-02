@@ -51,7 +51,6 @@ class Action {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug('Running action');
             const resourcesArchivePath = yield this.downloadResources();
-            core.info(`Downloaded file: ${resourcesArchivePath}`);
             const resourcesDirectory = yield this.unarchiveResoruces(resourcesArchivePath);
             const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519');
             this.configSSH(sshKeyPath);
@@ -75,7 +74,9 @@ class Action {
     downloadResources() {
         return __awaiter(this, void 0, void 0, function* () {
             core.info(`Downloading resources: ${this.resourceUrl}`);
-            return yield cache.downloadTool(this.resourceUrl);
+            const result = yield cache.downloadTool(this.resourceUrl);
+            core.info(`Downloaded file: ${result}`);
+            return result;
         });
     }
     unarchiveResoruces(resourcesArchivePath) {
