@@ -30,13 +30,14 @@ export default class Action {
 
     await this.convertToRawDisk(diskImagePath, resourcesDirectory)
 
-    const VmClass = xhyve.Vm.getVm(xhyve.Type.freeBsd)
-    const vm = new VmClass(sshKeyPath, path.join(resourcesDirectory, 'xhyve'), {
+    const xhyvePath = path.join(resourcesDirectory, 'xhyve')
+    const vm = xhyve.Vm.creareVm(xhyve.Type.freeBsd, sshKeyPath, xhyvePath, {
       memory: '4G',
       cpuCount: 2,
       diskImage: path.join(resourcesDirectory, this.targetDiskName),
       uuid: '864ED7F0-7876-4AA7-8511-816FABCFA87F',
-      userboot: path.join(resourcesDirectory, 'userboot.so')
+      userboot: path.join(resourcesDirectory, 'userboot.so'),
+      firmware: path.join(resourcesDirectory, 'uefi.fd')
     })
 
     await vm.init()

@@ -59,13 +59,14 @@ class Action {
             const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519');
             this.configSSH(sshKeyPath);
             yield this.convertToRawDisk(diskImagePath, resourcesDirectory);
-            const VmClass = xhyve.Vm.getVm(0 /* freeBsd */);
-            const vm = new VmClass(sshKeyPath, path.join(resourcesDirectory, 'xhyve'), {
+            const xhyvePath = path.join(resourcesDirectory, 'xhyve');
+            const vm = xhyve.Vm.creareVm(0 /* freeBsd */, sshKeyPath, xhyvePath, {
                 memory: '4G',
                 cpuCount: 2,
                 diskImage: path.join(resourcesDirectory, this.targetDiskName),
                 uuid: '864ED7F0-7876-4AA7-8511-816FABCFA87F',
-                userboot: path.join(resourcesDirectory, 'userboot.so')
+                userboot: path.join(resourcesDirectory, 'userboot.so'),
+                firmware: path.join(resourcesDirectory, 'uefi.fd')
             });
             yield vm.init();
             yield vm.run();
@@ -263,11 +264,13 @@ class Vm {
         this.xhyvePath = xhyvePath;
         this.options = options;
     }
-    static getVm(type) {
-        core.debug(`Vm.getVm: ${type}`);
+    static creareVm(type, sshKey, xhyvePath, options) {
+        core.debug(`Vm.creareVm: ${type}`);
         switch (type) {
             case 0 /* freeBsd */:
-                return FreeBsd;
+                return new FreeBsd(sshKey, xhyvePath, options);
+            case 1 /* openBsd */:
+                return new OpenBsd(sshKey, xhyvePath, options);
         }
     }
     init() {
@@ -346,7 +349,7 @@ class Vm {
             '-m', this.options.memory,
             '-c', this.options.cpuCount.toString(),
             '-s', '0:0,hostbridge',
-            '-s', '2:0,virtio-net',
+            '-s', `2:0,${this.networkDevice}`,
             '-s', `4:0,virtio-blk,${this.options.diskImage}`,
             '-s', '31,lpc',
             '-l', 'com1,stdio'
@@ -391,6 +394,23 @@ class FreeBsd extends Vm {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.execute('shutdown -p now');
         });
+    }
+    get networkDevice() {
+        return 'virtio-net';
+    }
+}
+class OpenBsd extends Vm {
+    get xhyveArgs() {
+        // prettier-ignore
+        return super.xhyveArgs.concat('-l', `bootrom,${this.options.firmware}`, '-w');
+    }
+    shutdown() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.execute('shutdown -h -p now');
+        });
+    }
+    get networkDevice() {
+        return 'e1000';
     }
 }
 function getIpAddressFromArp(macAddress) {

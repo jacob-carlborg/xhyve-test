@@ -10,10 +10,12 @@ export interface Options {
   diskImage: fs.PathLike
   cpuCount: number
   userboot: fs.PathLike
+  firmware: fs.PathLike
 }
 
 export const enum Type {
-  freeBsd
+  freeBsd,
+  openBsd
 }
 
 export abstract class Vm {
@@ -29,11 +31,18 @@ export abstract class Vm {
     this.options = options
   }
 
-  static getVm(type: Type): typeof FreeBsd {
-    core.debug(`Vm.getVm: ${type}`)
+  static creareVm(
+    type: Type,
+    sshKey: fs.PathLike,
+    xhyvePath: fs.PathLike,
+    options: Options
+  ): Vm {
+    core.debug(`Vm.creareVm: ${type}`)
     switch (type) {
       case Type.freeBsd:
-        return FreeBsd
+        return new FreeBsd(sshKey, xhyvePath, options)
+      case Type.openBsd:
+        return new OpenBsd(sshKey, xhyvePath, options)
     }
   }
 
@@ -120,12 +129,14 @@ export abstract class Vm {
         '-m', this.options.memory,
         '-c', this.options.cpuCount.toString(),
         '-s', '0:0,hostbridge',
-        '-s', '2:0,virtio-net',
+        '-s', `2:0,${this.networkDevice}`,
         '-s', `4:0,virtio-blk,${this.options.diskImage}`,
         '-s', '31,lpc',
         '-l', 'com1,stdio'
       ]
   }
+
+  protected abstract get networkDevice(): string
 }
 
 export function extractIpAddress(
@@ -182,6 +193,28 @@ class FreeBsd extends Vm {
 
   async shutdown(): Promise<void> {
     await this.execute('shutdown -p now')
+  }
+
+  protected get networkDevice(): string {
+    return 'virtio-net'
+  }
+}
+
+class OpenBsd extends Vm {
+  get xhyveArgs(): string[] {
+    // prettier-ignore
+    return super.xhyveArgs.concat(
+      '-l', `bootrom,${this.options.firmware}`,
+      '-w'
+    )
+  }
+
+  async shutdown(): Promise<void> {
+    await this.execute('shutdown -h -p now')
+  }
+
+  protected get networkDevice(): string {
+    return 'e1000'
   }
 }
 
