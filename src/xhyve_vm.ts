@@ -3,6 +3,7 @@ import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import {spawn} from 'child_process'
 import {wait} from './wait'
+import {execWithOutput, ExecuteOptions} from './utility'
 
 export interface Options {
   memory: string
@@ -154,33 +155,6 @@ export function extractIpAddress(
   if (ipAddress) core.info(`Found IP address: '${ipAddress}'`)
 
   return ipAddress
-}
-
-export async function execWithOutput(
-  commandLine: string,
-  args?: string[],
-  options: ExecuteOptions = {}
-): Promise<string> {
-  let output = ''
-
-  const exitCode = await exec.exec(commandLine, args, {
-    silent: options.silent,
-    ignoreReturnCode: options.ignoreReturnCode,
-    listeners: {
-      stdout: buffer => (output += buffer.toString())
-    }
-  })
-
-  if (exitCode !== 0)
-    throw Error(`Failed to executed command: ${commandLine} ${args?.join(' ')}`)
-
-  return output.toString()
-}
-
-interface ExecuteOptions {
-  log?: boolean
-  ignoreReturnCode?: boolean
-  silent?: boolean
 }
 
 class FreeBsd extends Vm {

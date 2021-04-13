@@ -42,38 +42,33 @@ const cache = __importStar(__webpack_require__(784));
 const core = __importStar(__webpack_require__(186));
 const exec = __importStar(__webpack_require__(514));
 const xhyve = __importStar(__webpack_require__(722));
+const utility_1 = __webpack_require__(857);
 class Action {
     constructor() {
         this.resourceUrl = 'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar';
         this.diskImageUrl = 'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/disk.qcow2';
         this.targetDiskName = 'disk.raw';
+        this.tempPath = fs.mkdtempSync('resources');
+        this.privateSshKey = path.join(this.tempPath, 'ed25519');
+        this.publicSshKey = `${this.privateSshKey}.pub`;
+        this.resourceDisk = new ResourceDisk(this.tempPath);
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug('Running action');
             const [diskImagePath, resourcesArchivePath] = yield Promise.all([
                 this.downloadDiskImage(),
-                this.downloadResources()
+                this.downloadResources(),
+                this.setupSSHKey()
             ]);
-            const resourcesDirectory = yield this.unarchiveResoruces(resourcesArchivePath);
-            const sshKeyPath = path.join(resourcesDirectory, 'id_ed25519');
-            this.configSSH(sshKeyPath);
-            yield this.convertToRawDisk(diskImagePath, resourcesDirectory);
-            const xhyvePath = path.join(resourcesDirectory, 'xhyve');
-            const vm = xhyve.Vm.creareVm(0 /* freeBsd */, sshKeyPath, xhyvePath, {
-                memory: '4G',
-                cpuCount: 2,
-                diskImage: path.join(resourcesDirectory, this.targetDiskName),
-                uuid: '864ED7F0-7876-4AA7-8511-816FABCFA87F',
-                userboot: path.join(resourcesDirectory, 'userboot.so'),
-                firmware: path.join(resourcesDirectory, 'uefi.fd')
-            });
+            const vm = yield this.creareVm(resourcesArchivePath, diskImagePath);
             yield vm.init();
             yield vm.run();
             yield vm.wait(10);
             yield vm.execute('freebsd-version');
             // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
             yield vm.stop();
+            fs.rmdirSync(this.tempPath, { recursive: true });
         });
     }
     downloadDiskImage() {
@@ -92,13 +87,45 @@ class Action {
             return result;
         });
     }
+    creareVm(resourcesArchivePath, diskImagePath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.configSSH();
+            const resourcesDirectory = yield this.unarchiveResoruces(resourcesArchivePath);
+            yield this.convertToRawDisk(diskImagePath, resourcesDirectory);
+            const xhyvePath = path.join(resourcesDirectory, 'xhyve');
+            return xhyve.Vm.creareVm(0 /* freeBsd */, this.privateSshKey, xhyvePath, {
+                memory: '4G',
+                cpuCount: 2,
+                diskImage: path.join(resourcesDirectory, this.targetDiskName),
+                uuid: '864ED7F0-7876-4AA7-8511-816FABCFA87F',
+                userboot: path.join(resourcesDirectory, 'userboot.so'),
+                firmware: path.join(resourcesDirectory, 'uefi.fd')
+            });
+        });
+    }
+    setupSSHKey() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const mountPath = yield this.resourceDisk.create();
+            yield exec.exec('ssh-keygen', [
+                '-t',
+                'ed25519',
+                '-f',
+                this.privateSshKey.toString(),
+                '-q',
+                '-N',
+                ''
+            ]);
+            fs.renameSync(this.publicSshKey, path.join(mountPath, 'key'));
+            this.resourceDisk.unmount();
+        });
+    }
     unarchiveResoruces(resourcesArchivePath) {
         return __awaiter(this, void 0, void 0, function* () {
             core.info(`Unarchiving resoruces: ${resourcesArchivePath}`);
             return cache.extractTar(resourcesArchivePath, undefined, '-x');
         });
     }
-    configSSH(sshKey) {
+    configSSH() {
         core.debug('Configuring SSH');
         const homeDirectory = process.env['HOME'];
         if (homeDirectory === undefined)
@@ -111,7 +138,6 @@ class Action {
             'SendEnv CI GITHUB_*'
         ].join('\n');
         fs.appendFileSync(path.join(sshDirectory, 'config'), `${lines}\n`);
-        fs.chmodSync(sshKey, 0o600);
     }
     convertToRawDisk(diskImage, resourcesDirectory) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -130,6 +156,69 @@ class Action {
     }
 }
 exports.default = Action;
+class ResourceDisk {
+    constructor(tempPath) {
+        this.mountName = 'RES';
+        this.mountPath = path.join('/Volumes', this.mountName);
+        this.tempPath = tempPath;
+        this.diskPath = path.join(this.tempPath, 'res.raw');
+    }
+    create() {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.debug('Creating resource disk');
+            yield this.createDiskFile();
+            this.devicePath = yield this.createDiskDevice();
+            yield this.partitionDisk();
+            return this.mountPath;
+        });
+    }
+    unmount() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.unmountDisk();
+            yield this.detachDisk();
+        });
+    }
+    createDiskFile() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield exec.exec('mkfile', ['-n', '40m', this.diskPath]);
+        });
+    }
+    createDiskDevice() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const devicePath = yield utility_1.execWithOutput('hdiutil', [
+                'attach',
+                '-imagekey',
+                'diskimage-class=CRawDiskImage',
+                '-nomount',
+                this.diskPath
+            ], { silent: true });
+            return devicePath.trim();
+        });
+    }
+    partitionDisk() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield exec.exec('diskutil', [
+                'partitionDisk',
+                this.devicePath,
+                '1',
+                'GPT',
+                'fat32',
+                this.mountPath,
+                '100%'
+            ]);
+        });
+    }
+    unmountDisk() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield exec.exec('umount', [this.mountPath]);
+        });
+    }
+    detachDisk() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield exec.exec('hdiutil', ['detach', this.devicePath]);
+        });
+    }
+}
 //# sourceMappingURL=action.js.map
 
 /***/ }),
@@ -185,6 +274,62 @@ function main() {
 }
 main();
 //# sourceMappingURL=main.js.map
+
+/***/ }),
+
+/***/ 857:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.execWithOutput = void 0;
+const exec = __importStar(__webpack_require__(514));
+function execWithOutput(commandLine, args, options = {}) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let output = '';
+        const exitCode = yield exec.exec(commandLine, args, {
+            silent: options.silent,
+            ignoreReturnCode: options.ignoreReturnCode,
+            listeners: {
+                stdout: buffer => (output += buffer.toString())
+            }
+        });
+        if (exitCode !== 0)
+            throw Error(`Failed to executed command: ${commandLine} ${args === null || args === void 0 ? void 0 : args.join(' ')}`);
+        return output.toString();
+    });
+}
+exports.execWithOutput = execWithOutput;
+//# sourceMappingURL=utility.js.map
 
 /***/ }),
 
@@ -253,11 +398,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.execWithOutput = exports.extractIpAddress = exports.Vm = void 0;
+exports.extractIpAddress = exports.Vm = void 0;
 const core = __importStar(__webpack_require__(186));
 const exec = __importStar(__webpack_require__(514));
 const child_process_1 = __webpack_require__(129);
 const wait_1 = __webpack_require__(817);
+const utility_1 = __webpack_require__(857);
 class Vm {
     constructor(sshKey, xhyvePath, options) {
         this.sshKey = sshKey;
@@ -332,7 +478,7 @@ class Vm {
     getMacAddress() {
         return __awaiter(this, void 0, void 0, function* () {
             core.debug('Getting MAC address');
-            this.macAddress = (yield execWithOutput('sudo', this.xhyveArgs.concat('-M'), { silent: true }))
+            this.macAddress = (yield utility_1.execWithOutput('sudo', this.xhyveArgs.concat('-M'), { silent: true }))
                 .trim()
                 .slice(5);
             core.debug(`Found MAC address: '${this.macAddress}'`);
@@ -369,22 +515,6 @@ function extractIpAddress(arpOutput, macAddress) {
     return ipAddress;
 }
 exports.extractIpAddress = extractIpAddress;
-function execWithOutput(commandLine, args, options = {}) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let output = '';
-        const exitCode = yield exec.exec(commandLine, args, {
-            silent: options.silent,
-            ignoreReturnCode: options.ignoreReturnCode,
-            listeners: {
-                stdout: buffer => (output += buffer.toString())
-            }
-        });
-        if (exitCode !== 0)
-            throw Error(`Failed to executed command: ${commandLine} ${args === null || args === void 0 ? void 0 : args.join(' ')}`);
-        return output.toString();
-    });
-}
-exports.execWithOutput = execWithOutput;
 class FreeBsd extends Vm {
     get xhyveArgs() {
         // prettier-ignore
@@ -418,7 +548,7 @@ function getIpAddressFromArp(macAddress) {
         core.info(`Getting IP address for MAC address: ${macAddress}`);
         for (let i = 0; i < 500; i++) {
             core.info('Waiting for IP to become available...');
-            const arpOutput = yield execWithOutput('arp', ['-a', '-n'], { silent: true });
+            const arpOutput = yield utility_1.execWithOutput('arp', ['-a', '-n'], { silent: true });
             const ipAddress = extractIpAddress(arpOutput, macAddress);
             if (ipAddress)
                 return ipAddress;

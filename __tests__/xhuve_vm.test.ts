@@ -33,8 +33,3 @@ test('extractIpAddress - not finding IP address', () => {
 
   expect(xhyve.extractIpAddress(arpOutput, macAddress)).toBe(undefined)
 })
-
-test('execWithOutput', async () => {
-  const result = await xhyve.execWithOutput('ls')
-  expect(result.length).toBeGreaterThan(0)
-})
