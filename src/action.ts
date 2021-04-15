@@ -203,7 +203,7 @@ class ResourceDisk {
       '1',
       'GPT',
       'fat32',
-      this.mountPath,
+      this.mountName,
       '100%'
     ])
   }
