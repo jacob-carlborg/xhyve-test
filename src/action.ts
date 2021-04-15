@@ -101,7 +101,7 @@ export default class Action {
       '-N',
       ''
     ])
-    fs.renameSync(this.publicSshKey, path.join(mountPath, 'key'))
+    fs.copyFileSync(this.publicSshKey, path.join(mountPath, 'key'))
     this.resourceDisk.unmount()
   }
 
