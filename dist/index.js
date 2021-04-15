@@ -46,7 +46,7 @@ const utility_1 = __webpack_require__(857);
 class Action {
     constructor() {
         this.resourceUrl = 'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar';
-        this.diskImageUrl = 'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/disk.qcow2';
+        this.diskImageUrl = 'https://github.com/cross-platform-actions/openbsd-builder/releases/download/v0.0.1/openbsd-6.8-amd64.qcow2';
         this.targetDiskName = 'disk.raw';
         this.tempPath = fs.mkdtempSync('resources');
         this.privateSshKey = path.join(this.tempPath, 'ed25519');
@@ -65,7 +65,7 @@ class Action {
             yield vm.init();
             yield vm.run();
             yield vm.wait(10);
-            yield vm.execute('freebsd-version');
+            yield vm.execute('uname -a');
             // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
             yield vm.stop();
             fs.rmdirSync(this.tempPath, { recursive: true });
@@ -93,7 +93,7 @@ class Action {
             const resourcesDirectory = yield this.unarchiveResoruces(resourcesArchivePath);
             yield this.convertToRawDisk(diskImagePath, resourcesDirectory);
             const xhyvePath = path.join(resourcesDirectory, 'xhyve');
-            return xhyve.Vm.creareVm(0 /* freeBsd */, this.privateSshKey, xhyvePath, {
+            return xhyve.Vm.creareVm(1 /* openBsd */, this.privateSshKey, xhyvePath, {
                 memory: '4G',
                 cpuCount: 2,
                 diskImage: path.join(resourcesDirectory, this.targetDiskName),
@@ -175,16 +175,18 @@ class ResourceDisk {
     unmount() {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.unmountDisk();
-            yield this.detachDisk();
+            yield this.detachDevice();
         });
     }
     createDiskFile() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug('Creating disk file');
             yield exec.exec('mkfile', ['-n', '40m', this.diskPath]);
         });
     }
     createDiskDevice() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug('Creating disk file');
             const devicePath = yield utility_1.execWithOutput('hdiutil', [
                 'attach',
                 '-imagekey',
@@ -197,24 +199,27 @@ class ResourceDisk {
     }
     partitionDisk() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug('Partitioning disk');
             yield exec.exec('diskutil', [
                 'partitionDisk',
                 this.devicePath,
                 '1',
                 'GPT',
                 'fat32',
-                this.mountPath,
+                this.mountName,
                 '100%'
             ]);
         });
     }
     unmountDisk() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug('Unmounting disk');
             yield exec.exec('umount', [this.mountPath]);
         });
     }
-    detachDisk() {
+    detachDevice() {
         return __awaiter(this, void 0, void 0, function* () {
+            core.debug('Detaching device');
             yield exec.exec('hdiutil', ['detach', this.devicePath]);
         });
     }

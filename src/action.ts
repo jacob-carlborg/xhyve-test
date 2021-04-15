@@ -177,12 +177,12 @@ class ResourceDisk {
   }
 
   private async createDiskFile(): Promise<void> {
-    core.debug(`Creating disk file: ${this.diskPath}`)
+    core.debug('Creating disk file')
     await exec.exec('mkfile', ['-n', '40m', this.diskPath])
   }
 
   private async createDiskDevice(): Promise<string> {
-    core.debug(`Creating disk file: ${this.diskPath}`)
+    core.debug('Creating disk file')
     const devicePath = await execWithOutput(
       'hdiutil',
       [
@@ -199,9 +199,7 @@ class ResourceDisk {
   }
 
   private async partitionDisk(): Promise<void> {
-    core.debug(
-      `Partitioning disk. devicePath: ${this.devicePath}, mountName: ${this.mountName}`
-    )
+    core.debug('Partitioning disk')
     await exec.exec('diskutil', [
       'partitionDisk',
       this.devicePath,
@@ -214,12 +212,12 @@ class ResourceDisk {
   }
 
   private async unmountDisk(): Promise<void> {
-    core.debug(`Unmounting disk: ${this.mountPath}`)
+    core.debug('Unmounting disk')
     await exec.exec('umount', [this.mountPath])
   }
 
   private async detachDevice(): Promise<void> {
-    core.debug(`Detaching device: ${this.devicePath}`)
+    core.debug('Detaching device')
     await exec.exec('hdiutil', ['detach', this.devicePath])
   }
 }
