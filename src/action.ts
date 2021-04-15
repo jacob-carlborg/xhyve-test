@@ -41,7 +41,7 @@ export default class Action {
     await vm.init()
     await vm.run()
     await vm.wait(10)
-    await vm.execute('freebsd-version')
+    await vm.execute('uname -a')
     // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
     await vm.stop()
     fs.rmdirSync(this.tempPath, {recursive: true})
@@ -76,7 +76,7 @@ export default class Action {
 
     const xhyvePath = path.join(resourcesDirectory, 'xhyve')
     return xhyve.Vm.creareVm(
-      xhyve.Type.freeBsd,
+      xhyve.Type.openBsd,
       this.privateSshKey,
       xhyvePath,
       {
