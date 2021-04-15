@@ -13,7 +13,7 @@ export default class Action {
     'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar'
 
   private readonly diskImageUrl =
-    'https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/disk.qcow2'
+    'https://github.com/cross-platform-actions/openbsd-builder/releases/download/v0.0.1/openbsd-6.8-amd64.qcow2'
 
   private readonly targetDiskName = 'disk.raw'
   private readonly tempPath: string
