@@ -64,7 +64,7 @@ class Action {
             const vm = yield this.creareVm(resourcesArchivePath, diskImagePath);
             yield vm.init();
             yield vm.run();
-            yield vm.wait(10);
+            yield vm.wait(60);
             yield vm.execute('uname -a');
             // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
             yield vm.stop();
@@ -440,7 +440,7 @@ class Vm {
     wait(timeout) {
         return __awaiter(this, void 0, void 0, function* () {
             for (let index = 0; index < timeout; index++) {
-                core.info('Waiting for VM be ready...');
+                core.info('Waiting for VM to be ready...');
                 const result = yield this.execute('true', {
                     log: false,
                     silent: true,

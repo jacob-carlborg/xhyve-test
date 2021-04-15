@@ -40,7 +40,7 @@ export default class Action {
 
     await vm.init()
     await vm.run()
-    await vm.wait(10)
+    await vm.wait(60)
     await vm.execute('uname -a')
     // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
     await vm.stop()

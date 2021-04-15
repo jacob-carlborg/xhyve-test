@@ -60,7 +60,7 @@ export abstract class Vm {
 
   async wait(timeout: number): Promise<void> {
     for (let index = 0; index < timeout; index++) {
-      core.info('Waiting for VM be ready...')
+      core.info('Waiting for VM to be ready...')
 
       const result = await this.execute('true', {
         log: false,
