@@ -39,12 +39,12 @@ export default class Action {
     const vm = await this.creareVm(resourcesArchivePath, diskImagePath)
 
     await vm.init()
-    // await vm.run()
-    // await vm.wait(60)
-    // await vm.execute('uname -a')
-    // // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
-    // await vm.stop()
-    // fs.rmdirSync(this.tempPath, {recursive: true})
+    await vm.run()
+    await vm.wait(60)
+    await vm.execute('uname -a')
+    // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
+    await vm.stop()
+    fs.rmdirSync(this.tempPath, {recursive: true})
   }
 
   async downloadDiskImage(): Promise<string> {
