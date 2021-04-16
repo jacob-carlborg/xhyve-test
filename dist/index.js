@@ -97,6 +97,7 @@ class Action {
                 memory: '4G',
                 cpuCount: 2,
                 diskImage: path.join(resourcesDirectory, this.targetDiskName),
+                resourcesDiskImage: this.resourceDisk.diskPath,
                 uuid: '864ED7F0-7876-4AA7-8511-816FABCFA87F',
                 userboot: path.join(resourcesDirectory, 'userboot.so'),
                 firmware: path.join(resourcesDirectory, 'uefi.fd')
@@ -473,7 +474,7 @@ class Vm {
             if (options.log)
                 core.info(`Executing command inside VM: ${command}`);
             const buffer = Buffer.from(command);
-            return yield exec.exec(`ssh -t -i ${this.sshKey} root@${this.ipAddress}`, [], {
+            return yield exec.exec(`ssh -t -i ${this.sshKey} runner@${this.ipAddress}`, [], {
                 input: buffer,
                 silent: options.silent,
                 ignoreReturnCode: options.ignoreReturnCode
@@ -502,6 +503,7 @@ class Vm {
             '-s', '0:0,hostbridge',
             '-s', `2:0,${this.networkDevice}`,
             '-s', `4:0,virtio-blk,${this.options.diskImage}`,
+            '-s', `4:1,virtio-blk,${this.options.resourcesDiskImage}`,
             '-s', '31,lpc',
             '-l', 'com1,stdio'
         ];
@@ -527,7 +529,7 @@ class FreeBsd extends Vm {
     }
     shutdown() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.execute('shutdown -p now');
+            yield this.execute('sudo shutdown -p now');
         });
     }
     get networkDevice() {
@@ -541,7 +543,7 @@ class OpenBsd extends Vm {
     }
     shutdown() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.execute('shutdown -h -p now');
+            yield this.execute('sudo shutdown -h -p now');
         });
     }
     get networkDevice() {

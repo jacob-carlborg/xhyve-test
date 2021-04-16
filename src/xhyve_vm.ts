@@ -9,6 +9,7 @@ export interface Options {
   memory: string
   uuid: string
   diskImage: fs.PathLike
+  resourcesDiskImage: fs.PathLike
   cpuCount: number
   userboot: fs.PathLike
   firmware: fs.PathLike
@@ -99,7 +100,7 @@ export abstract class Vm {
     const buffer = Buffer.from(command)
 
     return await exec.exec(
-      `ssh -t -i ${this.sshKey} root@${this.ipAddress}`,
+      `ssh -t -i ${this.sshKey} runner@${this.ipAddress}`,
       [],
       {
         input: buffer,
@@ -132,6 +133,7 @@ export abstract class Vm {
         '-s', '0:0,hostbridge',
         '-s', `2:0,${this.networkDevice}`,
         '-s', `4:0,virtio-blk,${this.options.diskImage}`,
+        '-s', `4:1,virtio-blk,${this.options.resourcesDiskImage}`,
         '-s', '31,lpc',
         '-l', 'com1,stdio'
       ]
@@ -166,7 +168,7 @@ class FreeBsd extends Vm {
   }
 
   async shutdown(): Promise<void> {
-    await this.execute('shutdown -p now')
+    await this.execute('sudo shutdown -p now')
   }
 
   protected get networkDevice(): string {
@@ -184,7 +186,7 @@ class OpenBsd extends Vm {
   }
 
   async shutdown(): Promise<void> {
-    await this.execute('shutdown -h -p now')
+    await this.execute('sudo shutdown -h -p now')
   }
 
   protected get networkDevice(): string {

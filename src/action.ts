@@ -83,6 +83,7 @@ export default class Action {
         memory: '4G',
         cpuCount: 2,
         diskImage: path.join(resourcesDirectory, this.targetDiskName),
+        resourcesDiskImage: this.resourceDisk.diskPath,
         uuid: '864ED7F0-7876-4AA7-8511-816FABCFA87F',
         userboot: path.join(resourcesDirectory, 'userboot.so'),
         firmware: path.join(resourcesDirectory, 'uefi.fd')
@@ -149,11 +150,12 @@ export default class Action {
 }
 
 class ResourceDisk {
+  readonly diskPath: string
+
   private readonly mountName = 'RES'
   private readonly mountPath: string
 
   private readonly tempPath: string
-  private readonly diskPath: string
   private devicePath!: string
 
   constructor(tempPath: string) {
