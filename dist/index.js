@@ -63,12 +63,12 @@ class Action {
             ]);
             const vm = yield this.creareVm(resourcesArchivePath, diskImagePath);
             yield vm.init();
-            yield vm.run();
-            yield vm.wait(60);
-            yield vm.execute('uname -a');
-            // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
-            yield vm.stop();
-            fs.rmdirSync(this.tempPath, { recursive: true });
+            // await vm.run()
+            // await vm.wait(60)
+            // await vm.execute('uname -a')
+            // // "sh -c 'cd $GITHUB_WORKSPACE && exec sh'"
+            // await vm.stop()
+            // fs.rmdirSync(this.tempPath, {recursive: true})
         });
     }
     downloadDiskImage() {
