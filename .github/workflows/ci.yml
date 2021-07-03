@@ -9,7 +9,7 @@ jobs:
   test:
     name: Test
     container: ubuntu
-    # runs-on: ubuntu
+    runs-on: ubuntu-latest
 
     steps:
       - name: uname
