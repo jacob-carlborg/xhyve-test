@@ -8,9 +8,9 @@ on:
 jobs:
   test:
     name: Test
-    container: ubuntu
+    container: aarch64/ubuntu
     runs-on: ubuntu-latest
 
     steps:
       - name: uname
-        run: uname
+        run: uname -a
