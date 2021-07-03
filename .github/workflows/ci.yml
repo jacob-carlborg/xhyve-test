@@ -8,10 +8,10 @@ on:
 jobs:
   test:
     name: Test
-    container:
-      image: ubuntu
+    # container:
+    #   image: ubuntu
     runs-on: ubuntu-latest
 
     steps:
       - name: uname
-        run: docker ps
+        run: docker run --help
