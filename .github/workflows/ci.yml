@@ -15,5 +15,5 @@ jobs:
     steps:
       - name: uname
         run: |
-          docker buildx create --platform linux/arm64 --name foobar
+          docker buildx create --platform linux/arm64 --name foobar --append
           docker buildx ls
