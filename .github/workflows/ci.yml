@@ -8,7 +8,9 @@ on:
 jobs:
   test:
     name: Test
-    container: aarch64/ubuntu
+    container:
+      image: ubuntu
+      options: --platform arm64
     runs-on: ubuntu-latest
 
     steps:
