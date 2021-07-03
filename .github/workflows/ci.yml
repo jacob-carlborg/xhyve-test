@@ -8,22 +8,9 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: macos-10.15
+    container: ubuntu
+    # runs-on: ubuntu
 
     steps:
-      - name: Clone Repository
-        uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-
-      - name: Download disk archive
-        run: curl -L -o resources.tar https://github.com/jacob-carlborg/xhyve-test/releases/download/qcow2/resources.tar
-
-      - name: Unarchive disk
-        run: tar xf resources.tar
-
-      - name: List files
-        run: ls -lh
-
-      - name: Run CI
-        run: ./ci.rb
+      - name: uname
+        run: uname
