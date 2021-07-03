@@ -14,4 +14,4 @@ jobs:
 
     steps:
       - name: uname
-        run: docker run --help
+        run: docker buildx ls
