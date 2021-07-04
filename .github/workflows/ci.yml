@@ -17,8 +17,4 @@ jobs:
         uses: docker/setup-qemu-action@v1
 
       - name: Run Docker container
-        run: |
-          docker buildx create --platform linux/arm64 --name foobar --use
-          docker buildx inspect --bootstrap --builder foobar
-          docker buildx ls
-          docker run --rm --platform linux/arm64 ubuntu uname -a
+        run: docker run --rm --platform linux/arm64 ubuntu uname -a
