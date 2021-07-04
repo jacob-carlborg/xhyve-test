@@ -8,14 +8,18 @@ on:
 jobs:
   test:
     name: Test
+    services:
+      qemu-install:
+        image: tonistiigi/binfmt:latest
+        options: --rm --privileged --install
+      qemu:
+        image: tonistiigi/binfmt:latest
+        options: --rm --privileged
     container:
       image: ubuntu
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
-      - name: Run Docker container
+      - name: uname
         run: uname -a
         # run: docker run --rm --platform linux/arm64 ubuntu uname -a
