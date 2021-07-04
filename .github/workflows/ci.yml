@@ -18,4 +18,4 @@ jobs:
           docker buildx create --platform linux/arm64 --name foobar --use
           docker buildx inspect --bootstrap --builder foobar
           docker buildx ls
-          docker run -it --rm --platform linux/arm64 ubuntu uname -a
+          docker run --rm --platform linux/arm64 ubuntu uname -a
