@@ -8,8 +8,8 @@ on:
 jobs:
   test:
     name: Test
-    # container:
-    #   image: ubuntu
+    container:
+      image: ubuntu
     runs-on: ubuntu-latest
 
     steps:
@@ -17,4 +17,5 @@ jobs:
         uses: docker/setup-qemu-action@v1
 
       - name: Run Docker container
-        run: docker run --rm --platform linux/arm64 ubuntu uname -a
+        run: uname -a
+        # run: docker run --rm --platform linux/arm64 ubuntu uname -a
