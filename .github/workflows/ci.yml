@@ -15,7 +15,8 @@ jobs:
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-      - name: uname
+
+      - name: Run Docker container
         run: |
           docker buildx create --platform linux/arm64 --name foobar --use
           docker buildx inspect --bootstrap --builder foobar
