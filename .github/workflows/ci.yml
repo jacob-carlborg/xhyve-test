@@ -11,10 +11,7 @@ jobs:
     services:
       qemu-install:
         image: tonistiigi/binfmt:latest
-        options: --rm --privileged --install
-      qemu:
-        image: tonistiigi/binfmt:latest
-        options: --rm --privileged
+        options: --privileged
     container:
       image: ubuntu
     runs-on: ubuntu-latest
