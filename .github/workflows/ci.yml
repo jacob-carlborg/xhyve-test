@@ -7,17 +7,8 @@ on:
 
 jobs:
   test:
-    name: Test
-    services:
-      qemu-install:
-        image: tonistiigi/binfmt:latest
-        options: --privileged
-    container:
-      image: ubuntu
-      options: --platform linux/arm64
     runs-on: ubuntu-latest
 
     steps:
-      - name: uname
-        run: uname -a
-        # run: docker run --rm --platform linux/arm64 ubuntu uname -a
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
