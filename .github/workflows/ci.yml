@@ -10,5 +10,8 @@ jobs:
     runs-on: macOS-latest
 
     steps:
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      - name: Number of cores
+        run:  sysctl -n hw.logicalcpu
+
+      - name: SPHardwareDataType
+        run: system_profiler SPHardwareDataType
